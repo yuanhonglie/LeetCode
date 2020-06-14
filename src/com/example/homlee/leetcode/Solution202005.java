@@ -202,9 +202,24 @@ public class Solution202005 {
         String output = solution.longestPalindrome(input);
         System.out.println(output);
         */
-
+        /*
+                            1
+                          /    \
+                        2        3
+                      /  \         \
+                    4      5         6
+                          /  \
+                        7     8
+         */
         int [] preorder = new int[] {1, 2, 4, 5, 7, 8, 3, 6};
         int[] inorder = new int[] {4, 2, 7, 5, 8, 1, 3, 6};
+        /*
+                            3
+                           / \
+                          9   20
+                             /  \
+                            15   7
+         */
 //        int [] preorder = new int[] {3, 9, 20, 15, 7};
 //        int[] inorder = new int[] {9, 3, 15, 20, 7};
         TreeNode treeNode = solution.buildTree(preorder, inorder);
