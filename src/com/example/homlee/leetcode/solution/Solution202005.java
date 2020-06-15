@@ -1,4 +1,4 @@
-package com.example.homlee.leetcode;
+package com.example.homlee.leetcode.solution;
 
 import java.util.HashMap;
 import java.util.Map;
