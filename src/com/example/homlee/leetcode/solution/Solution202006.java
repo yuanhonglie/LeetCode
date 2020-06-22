@@ -255,6 +255,54 @@ public class Solution202006 {
         return false;
     }
 
+    /**
+     * leetcode 10正则表达式匹配
+     * @param s
+     * @param p
+     * @return
+     */
+    public boolean isMatch(String s, String p) {
+        matched = false;
+        match(s, p, 0, 0);
+        return matched;
+    }
+
+    boolean matched = false;
+    private void match(String s, String p, int si, int pi) {
+        if (matched) return;
+        if (pi == p.length()) {
+            matched = si == s.length();
+            return ;
+        }
+
+        if (si < s.length()
+                && (p.charAt(pi) == s.charAt(si) || p.charAt(pi) == '.')) {
+            match(s, p, si + 1, pi + 1);
+        } else if (p.charAt(pi) == '*') {
+            //匹配零个前面的那一个元素
+
+            if (si > 0) {
+                match(s, p, si - 1, pi + 1);
+            } else {
+                match(s, p, 0, pi + 1);
+            }
+
+            if (pi > 0) {
+                if (si < s.length() && (p.charAt(pi - 1) == s.charAt(si) || p.charAt(pi - 1) == '.')) {
+                    //匹配多个前面的那一个元素
+                    match(s, p, si + 1, pi);
+                    //匹配一个前面的那一个元素
+                    match(s, p, si + 1, pi + 1);
+                }
+            }
+        } else {
+            match(s, p, si, pi + 1);
+        }
+
+        return;
+    }
+
+
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
         String[] input1 = {"flower", "flow", "flight"};
@@ -311,6 +359,25 @@ public class Solution202006 {
         input = "2147483648";
         System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
 
+        String s = "aa";
+        String p = "a";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "aa";
+        p = "a*";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "ab";
+        p = ".*";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "aab";
+        p = "c*a*b*";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "mississippi";
+        p = "mis*is*p*.";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
     }
 
 }
