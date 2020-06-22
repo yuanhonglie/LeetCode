@@ -2,9 +2,7 @@ package com.example.homlee.leetcode.solution;
 
 import com.example.homlee.leetcode.data.TreeNode;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class Solution202005 {
@@ -185,6 +183,52 @@ public class Solution202005 {
     //====0522=====
 
 
+    // Encodes a tree to a single string.
+
+    /**
+     * 序列化
+     * @param root
+     * @return
+     */
+    public String serialize(TreeNode root) {
+        StringBuilder sb = new StringBuilder();
+        serialize(root, sb);
+        return sb.toString();
+    }
+
+    private void serialize(TreeNode root, StringBuilder sb) {
+        if (root == null) {
+            sb.append("null,");
+            return;
+        }
+        sb.append(root.value + ",");
+        serialize(root.left, sb);
+        serialize(root.right, sb);
+    }
+
+    /**
+     * 反序列化
+     * @param data
+     * @return
+     */
+    public TreeNode deserialize(String data) {
+        String[] values = data.split(",");
+        List<String> valueList = new LinkedList<>(Arrays.asList(values));
+        return deserialize(valueList);
+    }
+
+    private TreeNode deserialize(List<String> list) {
+        if (list.get(0).equals("null")) {
+            list.remove(0);
+            return null;
+        }
+
+        TreeNode root = new TreeNode(Integer.valueOf(list.get(0)));
+        list.remove(0);
+        root.left = deserialize(list);
+        root.right = deserialize(list);
+        return root;
+    }
 
 
     public static void main(String[] args) {
@@ -228,7 +272,11 @@ public class Solution202005 {
         System.out.println("LevelOrder");
         levelorderPrint(treeNode);
 
-
+        System.out.println();
+        String serialize = solution.serialize(treeNode);
+        System.out.println("serialize " + serialize);
+        treeNode = solution.deserialize(serialize);
+        System.out.println("serialize " + solution.serialize(treeNode));
         /*
         ListNode node = new ListNode(2);
         ListNode left = node;
