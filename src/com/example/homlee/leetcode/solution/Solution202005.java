@@ -1,5 +1,7 @@
 package com.example.homlee.leetcode.solution;
 
+import com.example.homlee.leetcode.data.TreeNode;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -80,16 +82,7 @@ public class Solution202005 {
     }
 
 
-    //====0522=====
-    private static class TreeNode {
-        int value;
-        TreeNode left;
-        TreeNode right;
 
-        public TreeNode(int val) {
-            this.value = val;
-        }
-    }
 
     /**
      * leetcode 105 从前序与中序遍历序列构造二叉树

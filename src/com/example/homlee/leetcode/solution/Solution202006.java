@@ -1,5 +1,11 @@
 package com.example.homlee.leetcode.solution;
 
+import com.example.homlee.leetcode.data.TreeNode;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
 public class Solution202006 {
 
     /**
@@ -90,6 +96,165 @@ public class Solution202006 {
         return strs[0];
     }
 
+    /**
+     * 20200618 leetcode3 无重复字符的最长子串
+     * @param s
+     * @return
+     */
+    public int lengthOfLongestSubstring(String s) {
+        int max = 0;
+        int k = 0;
+        int start = 0;
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            int c = s.charAt(i);
+            Integer j = map.get(c);
+            if (j == null) {
+                k++;
+            } else {
+                start = j > start ? j : start;
+                k = i - start;
+            }
+            map.put(c, i);
+            max = max >= k ? max : k;
+        }
+
+        return max;
+    }
+
+    /**
+     * 20200619 leetcode 125 验证回文串
+     * @param s "A man, a plan, a canal: Panama"
+     * @return true
+     */
+    private boolean isPalindrome(String s) {
+        if (s == null || s.length() == 0) {
+            return true;
+        }
+        int i = 0;
+        int j = s.length() - 1;
+
+        while (i < j) {
+            while (i < j && !Character.isLetterOrDigit(s.charAt(i))) {
+                i++;
+            }
+
+            while (j > i && !Character.isLetterOrDigit(s.charAt(j))) {
+                j--;
+            }
+
+            if (Character.toLowerCase(s.charAt(i)) == Character.toLowerCase(s.charAt(j))) {
+                i++;
+                j--;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 20200619
+     * leetcode 1028 先序遍历还原二叉树
+     * @param s "1-2--3--4-5--6--7"
+     * @return
+     */
+    public TreeNode recoverFromPreorder(String s) {
+        Stack<TreeNode> stack = new Stack<>();
+        int i = 0;
+        int level = 0;//结点的层数
+        while (i < s.length()) {
+            int depth = 0;
+            while(s.charAt(i) == '-') {
+                depth++;
+                i++;
+            }
+
+            int value = 0;
+            while (i < s.length() && Character.isDigit(s.charAt(i))) {
+                value = value * 10 + s.charAt(i) - '0';
+                i++;
+            }
+
+            TreeNode node = new TreeNode(value);
+            if (depth >= level) {
+                if (!stack.isEmpty()) {
+                    stack.peek().left = node;
+                }
+            } else {
+                while (level > depth) {
+                    stack.pop();
+                    level--;
+                }
+                stack.peek().right = node;
+            }
+
+            stack.push(node);
+            level++;
+        }
+
+        while (stack.size() > 1) {
+            stack.pop();
+        }
+
+        return stack.peek();
+    }
+
+    /**
+     * 20200622 leetcode 8 字符串转换整数
+     * @param text
+     * @return
+     */
+    private int atoi(String text) {
+        if (text == null) {
+            return 0;
+        }
+
+        int i = 0;
+        while (i < text.length() && text.charAt(i) == ' ') {
+            i++;
+        }
+
+        int j = i;
+        long value = 0;
+        int sign = 1;
+        while ( j < text.length()) {
+            int ch = text.charAt(j);
+            if (Character.isDigit(ch)) {
+                value = value * 10 + ch - '0';
+                if (value > Integer.MAX_VALUE) {
+                    return sign == 1 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+                }
+            } else {
+                if (j == i) {
+                    if (ch == '-') {
+                        sign = -1;
+                    } else if (ch == '+') {
+                        sign = 1;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            j++;
+        }
+
+        return sign * (int)value;
+    }
+
+    /**
+     *
+     * @param pattern
+     * @param value
+     * @return
+     */
+    public boolean patternMatching(String pattern, String value) {
+        return false;
+    }
+
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
         String[] input1 = {"flower", "flow", "flight"};
@@ -111,6 +276,40 @@ public class Solution202006 {
         System.out.println("爬" + i + "个台阶总共有多少种爬法：" + solution202006.climbStairsWithArray1(i));
         long time4 = System.currentTimeMillis();
         System.out.println("执行时间：" + (time1 - start) + ", " + (time2 - time1) + ", " + (time3 - time2) + ", " + (time4 - time3));
+        String word1 = "abcabcbb";
+        System.out.println("\"" + word1 + "\"不含有重复字符的最长子串的长度是" + solution202006.lengthOfLongestSubstring(word1));
+        word1 = "bbbb";
+        System.out.println("\"" + word1 + "\"不含有重复字符的最长子串的长度是" + solution202006.lengthOfLongestSubstring(word1));
+        word1 = "pwwkew";
+        System.out.println("\"" + word1 + "\"不含有重复字符的最长子串的长度是" + solution202006.lengthOfLongestSubstring(word1));
+        word1 = "abba";
+        System.out.println("\"" + word1 + "\"不含有重复字符的最长子串的长度是" + solution202006.lengthOfLongestSubstring(word1));
+
+        String input = "A man, a plan, a canal: Panama";
+        //String input = "race a car";
+        System.out.println(input + " --> " + solution202006.isPalindrome(input));
+
+        //input = "1-2--3--4-5--6--7";
+        input = "1-2--3---4-5--6---7";
+        TreeNode node = solution202006.recoverFromPreorder(input);
+        System.out.println(input);
+        Solution202005.levelorderPrint(node);
+
+        System.out.println();
+        /* */
+        input = "42";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
+        input = "    -42";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
+        input = "4193 with words";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
+        input = "words and 987";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
+        input = "-91283472332";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
+
+        input = "2147483648";
+        System.out.println("\"" + input + "\" atoi is " + solution202006.atoi(input));
 
     }
 
