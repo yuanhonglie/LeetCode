@@ -262,41 +262,38 @@ public class Solution202006 {
      * @return
      */
     public boolean isMatch(String s, String p) {
-        matched = false;
-        match(s, p, 0, 0);
-        return matched;
+        boolean[] result = new boolean[1];
+        match(s, p, 0, 0, result);
+        return result[0];
     }
 
-    boolean matched = false;
-    private void match(String s, String p, int si, int pi) {
-        if (matched) return;
+    private void match(String s, String p, int si, int pi, boolean[] result) {
+        if (result[0]) return;
         if (pi == p.length()) {
-            matched = si == s.length();
+            result[0] = si == s.length();
             return ;
         }
 
         if (si < s.length()
                 && (p.charAt(pi) == s.charAt(si) || p.charAt(pi) == '.')) {
-            match(s, p, si + 1, pi + 1);
+            match(s, p, si + 1, pi + 1, result);
         } else if (p.charAt(pi) == '*') {
             //匹配零个前面的那一个元素
-
-            if (si > 0) {
-                match(s, p, si - 1, pi + 1);
-            } else {
-                match(s, p, 0, pi + 1);
-            }
+            match(s, p, si > 0 ? si - 1 : 0, pi + 1, result);
+            //只匹配一个
+            match(s, p, si, pi + 1, result);
 
             if (pi > 0) {
-                if (si < s.length() && (p.charAt(pi - 1) == s.charAt(si) || p.charAt(pi - 1) == '.')) {
+                if (si < s.length()
+                        && (p.charAt(pi - 1) == s.charAt(si) || p.charAt(pi - 1) == '.')) {
                     //匹配多个前面的那一个元素
-                    match(s, p, si + 1, pi);
+                    match(s, p, si + 1, pi, result);
                     //匹配一个前面的那一个元素
-                    match(s, p, si + 1, pi + 1);
+                    match(s, p, si + 1, pi + 1, result);
                 }
             }
-        } else {
-            match(s, p, si, pi + 1);
+        } else if (pi < p.length() - 2 && p.charAt(pi + 1) == '*') {
+            match(s, p, si, pi + 2, result);
         }
 
         return;
@@ -378,6 +375,15 @@ public class Solution202006 {
         s = "mississippi";
         p = "mis*is*p*.";
         System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "ab";
+        p = ".*c";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "aaa";
+        p = "ab*ac*a";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
     }
 
 }
