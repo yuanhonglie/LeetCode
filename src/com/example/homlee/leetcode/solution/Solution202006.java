@@ -279,16 +279,19 @@ public class Solution202006 {
                     if (i == 1) {
                         dp[i][j] = pCh == sCh;
                     } else {
-                        dp[i][j] = (dp[i-1][j-1] || dp[i][j-1]) && (sCh == p.charAt(i-2) || p.charAt(i-2) == '.') || dp[i-2][j];
+                        dp[i][j] = (dp[i-1][j-1] || dp[i][j-1]) && matches(p.charAt(i - 2), sCh) || dp[i-2][j];
                     }
                 } else {
-                    dp[i][j] = dp[i-1][j-1] && (pCh == '.' || pCh == sCh);
+                    dp[i][j] = dp[i-1][j-1] && matches(pCh, sCh);
                 }
             }
         }
 
-
         return dp[pn][sn];
+    }
+
+    private boolean matches(char pCh, char sCh) {
+        return pCh == sCh || pCh == '.';
     }
 
     public static void main(String[] args) {
@@ -373,6 +376,10 @@ public class Solution202006 {
 
         s = "aaa";
         p = "ab*ac*a";
+        System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
+
+        s = "*";
+        p = "**";
         System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
 
     }
