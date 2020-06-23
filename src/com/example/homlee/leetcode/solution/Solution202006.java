@@ -294,6 +294,33 @@ public class Solution202006 {
         return pCh == sCh || pCh == '.';
     }
 
+    /**
+     * 20200623 leetcode 67 二进制求和
+     * @param a
+     * @param b
+     * @return
+     */
+    public String addBinary(String a, String b) {
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        int carry = 0;
+        int max = Math.max(a.length(), b.length());
+        while (i < max) {
+            carry += i < a.length() ? a.charAt(a.length() - 1 - i) - '0' : 0;
+            carry += i < b.length() ? b.charAt(b.length() - 1 - i) - '0' : 0;
+
+            sb.append(carry % 2 == 0 ? '0' : '1');
+            carry /= 2;
+            i++;
+        }
+
+        if (carry == 1) {
+            sb.append('1');
+        }
+        sb.reverse();
+        return sb.toString();
+    }
+
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
         String[] input1 = {"flower", "flow", "flight"};
@@ -382,6 +409,9 @@ public class Solution202006 {
         p = "**";
         System.out.println("\"" + s + "\" matches \"" + p + "\" : " + solution202006.isMatch(s, p));
 
+        String a = "1010";
+        String b = "1011";
+        System.out.println("\"" + a + "\" + \"" + b + "\" = " + solution202006.addBinary(a, b));
     }
 
 }
