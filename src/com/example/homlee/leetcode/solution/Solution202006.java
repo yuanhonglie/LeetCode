@@ -262,43 +262,34 @@ public class Solution202006 {
      * @return
      */
     public boolean isMatch(String s, String p) {
-        boolean[] result = new boolean[1];
-        match(s, p, 0, 0, result);
-        return result[0];
-    }
+        int sn = s.length();
+        int pn = p.length();
+        boolean[][] dp = new boolean[pn+1][sn+1];
 
-    private void match(String s, String p, int si, int pi, boolean[] result) {
-        if (result[0]) return;
-        if (pi == p.length()) {
-            result[0] = si == s.length();
-            return ;
+        dp[0][0] = true;
+        for (int i = 2; i <= pn; i++) {
+            dp[i][0] = p.charAt(i-1) == '*' ? dp[i-2][0] : false;
         }
 
-        if (si < s.length()
-                && (p.charAt(pi) == s.charAt(si) || p.charAt(pi) == '.')) {
-            match(s, p, si + 1, pi + 1, result);
-        } else if (p.charAt(pi) == '*') {
-            //匹配零个前面的那一个元素
-            match(s, p, si > 0 ? si - 1 : 0, pi + 1, result);
-            //只匹配一个
-            match(s, p, si, pi + 1, result);
-
-            if (pi > 0) {
-                if (si < s.length()
-                        && (p.charAt(pi - 1) == s.charAt(si) || p.charAt(pi - 1) == '.')) {
-                    //匹配多个前面的那一个元素
-                    match(s, p, si + 1, pi, result);
-                    //匹配一个前面的那一个元素
-                    match(s, p, si + 1, pi + 1, result);
+        for (int i = 1; i <= pn; i++) {
+            for (int j = 1; j <= sn; j++) {
+                char pCh = p.charAt(i-1);
+                char sCh = s.charAt(j-1);
+                if (pCh == '*') {
+                    if (i == 1) {
+                        dp[i][j] = pCh == sCh;
+                    } else {
+                        dp[i][j] = (dp[i-1][j-1] || dp[i][j-1]) && (sCh == p.charAt(i-2) || p.charAt(i-2) == '.') || dp[i-2][j];
+                    }
+                } else {
+                    dp[i][j] = dp[i-1][j-1] && (pCh == '.' || pCh == sCh);
                 }
             }
-        } else if (pi < p.length() - 2 && p.charAt(pi + 1) == '*') {
-            match(s, p, si, pi + 2, result);
         }
 
-        return;
-    }
 
+        return dp[pn][sn];
+    }
 
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
