@@ -1,8 +1,5 @@
 package com.example.homlee.leetcode;
 
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-
 /**
  * 二叉查找数
  */
