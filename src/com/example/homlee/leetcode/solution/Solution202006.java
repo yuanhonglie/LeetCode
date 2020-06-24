@@ -459,11 +459,18 @@ public class Solution202006 {
      * @return
      */
     public int maxArea(int[] height) {
-
-
-
-
-        return 0;
+        int max = 0;
+        int i = 0;
+        int j = height.length - 1;
+        while (i < j) {
+            max = Math.max(Math.min(height[i], height[j]) * (j - i), max);
+            if (height[i] < height[j]) {
+                i++;
+            } else {
+                j--;
+            }
+        }
+        return max;
     }
 
     public static void main(String[] args) {
@@ -569,6 +576,8 @@ public class Solution202006 {
 
         nums = new int[] {3,0,-2,-1,1,2};
         System.out.println("threesum equals zero ---> " + solution202006.threeSum(nums));
+        int[] heights = new int[] {1,8,6,2,5,4,8,3,7};
+        System.out.println("maxArea is ---> " + solution202006.maxArea(heights));
     }
 
 }
