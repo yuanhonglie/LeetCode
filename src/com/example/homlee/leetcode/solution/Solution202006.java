@@ -2,9 +2,7 @@ package com.example.homlee.leetcode.solution;
 
 import com.example.homlee.leetcode.data.TreeNode;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class Solution202006 {
 
@@ -321,6 +319,153 @@ public class Solution202006 {
         return sb.toString();
     }
 
+    /**
+     * leetcode 16 最接近的三数之和
+     * @param nums
+     * @param target
+     * @return
+     */
+    public int threeSumClosest(int[] nums, int target) {
+        Arrays.sort(nums);
+        int closest = 0;
+        int num1, num2, num3, sum;
+
+        for (int i = 0; i < nums.length - 2; i++) {
+            num1 = nums[i];
+
+            int j = i + 1;
+            int k = nums.length - 1;
+            if (i == 0) {
+                closest = num1 + nums[j] + nums[k];
+            }
+            while (j < k) {
+                num2 = nums[j];
+                num3 = nums[k];
+                sum = num1 + num2 + num3;
+                if (Math.abs(target - sum) < Math.abs(target - closest)) {
+                    closest = sum;
+                }
+
+                if (sum < target) {
+                    while (j + 1 < k && nums[j] == nums[j+1]) {
+                        j++;
+                    }
+                    j++;
+                } else if (sum > target) {
+                    while (k - 1 > j && nums[k] == nums[k-1]) {
+                        k--;
+                    }
+                    k--;
+                } else {
+                    return target;
+                }
+            }
+        }
+
+
+        return closest;
+    }
+
+    /**
+     * leetcode 15 三数之和为0
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> threeSum(int[] nums) {
+        Arrays.sort(nums);
+        List<List<Integer>> list = new ArrayList<>();
+        int sum = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (i > 0 && nums[i] == nums[i - 1]) {
+                continue;
+            }
+
+            int k = nums.length - 1;
+            for (int j = i + 1; j < k; j++) {
+                if (j > i + 1 && nums[j] == nums[j - 1]) {
+                    continue;
+                }
+
+                while (k > j && nums[i] + nums[j] + nums[k] > 0) {
+                    k--;
+                }
+
+                if (j == k) {
+                    break;
+                }
+
+                if (nums[i] + nums[j] + nums[k] == 0) {
+                    List<Integer> l = new ArrayList<>();
+                    l.add(nums[i]);
+                    l.add(nums[j]);
+                    l.add(nums[k]);
+                    list.add(l);
+                }
+            }
+        }
+
+        return list;
+    }
+
+
+    /**
+     * leetcode 15 三数之和为0
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> threeSum1(int[] nums) {
+        int n = nums.length;
+        Arrays.sort(nums);
+        List<List<Integer>> ans = new ArrayList<List<Integer>>();
+        // 枚举 a
+        for (int first = 0; first < n; ++first) {
+            // 需要和上一次枚举的数不相同
+            if (first > 0 && nums[first] == nums[first - 1]) {
+                continue;
+            }
+            // c 对应的指针初始指向数组的最右端
+            int third = n - 1;
+            int target = -nums[first];
+            // 枚举 b
+            for (int second = first + 1; second < n; ++second) {
+                // 需要和上一次枚举的数不相同
+                if (second > first + 1 && nums[second] == nums[second - 1]) {
+                    continue;
+                }
+                // 需要保证 b 的指针在 c 的指针的左侧
+                while (second < third && nums[second] + nums[third] > target) {
+                    --third;
+                }
+                // 如果指针重合，随着 b 后续的增加
+                // 就不会有满足 a+b+c=0 并且 b<c 的 c 了，可以退出循环
+                if (second == third) {
+                    break;
+                }
+                if (nums[second] + nums[third] == target) {
+                    List<Integer> list = new ArrayList<Integer>();
+                    list.add(nums[first]);
+                    list.add(nums[second]);
+                    list.add(nums[third]);
+                    ans.add(list);
+                }
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * leetcode 11. 盛最多水的容器
+     * @param height
+     * @return
+     */
+    public int maxArea(int[] height) {
+
+
+
+
+        return 0;
+    }
+
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
         String[] input1 = {"flower", "flow", "flight"};
@@ -412,6 +557,18 @@ public class Solution202006 {
         String a = "1010";
         String b = "1011";
         System.out.println("\"" + a + "\" + \"" + b + "\" = " + solution202006.addBinary(a, b));
+
+
+        int[] nums = new int[] {-1, 2, 1, -4};
+        int target = 1;
+        System.out.println("closet threesum is " + solution202006.threeSumClosest(nums, target));
+
+        nums = new int[] {-1, 0, 1, 1, 55};
+        target = 3;
+        System.out.println("closet threesum is " + solution202006.threeSumClosest(nums, target));
+
+        nums = new int[] {3,0,-2,-1,1,2};
+        System.out.println("threesum equals zero ---> " + solution202006.threeSum(nums));
     }
 
 }
