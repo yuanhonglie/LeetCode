@@ -473,6 +473,148 @@ public class Solution202006 {
         return max;
     }
 
+    /**
+     * leetcode 165 比较版本号
+     * @param version1
+     * @param version2
+     * @return 如果 version1 > version2 返回 1，如果 version1 < version2 返回 -1，除此之外返回 0。
+     */
+    public int compareVersion(String version1, String version2) {
+        String[] vnums1 = version1.split("\\.");
+        String[] vnums2 = version2.split("\\.");
+
+        int n = vnums1.length >= vnums2.length ? vnums1.length : vnums2.length;
+        for (int i = 0; i < n; i++) {
+            String text1 = i < vnums1.length ? vnums1[i] : null;
+            String text2 = i < vnums2.length ? vnums2[i] : null;
+
+            if (text2Num(text1) < text2Num(text2)) {
+                return -1;
+            } else if (text2Num(text1) > text2Num(text2)) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    int text2Num(String text) {
+        if (text == null) {
+            return 0;
+        }
+
+        int value = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            value = value * 10 + ch - '0';
+        }
+
+        return value;
+    }
+
+    /**
+     * leetcode 209. 长度最小的子数组
+     * @param s
+     * @param nums
+     * @return
+     */
+    public int minSubArrayLen(int s, int[] nums) {
+        int left = 0;
+        int right = 0;
+        int sum = 0;
+        int min = Integer.MAX_VALUE;
+        while (right < nums.length) {
+            if (sum < s) {
+                sum += nums[right];
+                right++;
+            } else {
+                if (left < right) {
+                    sum -= nums[left];
+                    left++;
+                } else {
+                    sum += nums[right];
+                    right++;
+                }
+            }
+
+            if (sum >= s && right - left < min) {
+                min = right - left;
+            }
+        }
+
+        while (sum >= s && left < right) {
+            sum -= nums[left];
+            left++;
+            if (sum >= s) {
+                if (right - left < min) {
+                    min = right - left;
+                }
+            }
+        }
+
+        return min == Integer.MAX_VALUE ? 0 : min;
+    }
+
+
+    /**
+     * leetcode 209. 长度最小的子数组
+     * @param s
+     * @param nums
+     * @return
+     */
+    public int minSubArrayLen1(int s, int[] nums) {
+        int n = nums.length;
+        if (n == 0) {
+            return 0;
+        }
+        int ans = Integer.MAX_VALUE;
+        int start = 0, end = 0;
+        int sum = 0;
+        while (end < n) {
+            sum += nums[end];
+            while (sum >= s) {
+                ans = Math.min(ans, end - start + 1);
+                sum -= nums[start];
+                start++;
+            }
+            end++;
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+
+    /**
+     * leetcode 209. 长度最小的子数组
+     * @param s
+     * @param nums
+     * @return
+     */
+    public int minSubArrayLen2(int s, int[] nums) {
+        int n = nums.length;
+        if (n == 0) {
+            return 0;
+        }
+        int ans = Integer.MAX_VALUE;
+        int[] sums = new int[n + 1];
+        // 为了方便计算，令 size = n + 1
+        // sums[0] = 0 意味着前 0 个元素的前缀和为 0
+        // sums[1] = A[0] 前 1 个元素的前缀和为 A[0]
+        // 以此类推
+        for (int i = 1; i <= n; i++) {
+            sums[i] = sums[i - 1] + nums[i - 1];
+        }
+        for (int i = 1; i <= n; i++) {
+            int target = s + sums[i - 1];
+            int bound = Arrays.binarySearch(sums, target);
+            if (bound < 0) {
+                bound = -bound - 1;
+            }
+            if (bound <= n) {
+                ans = Math.min(ans, bound - (i - 1));
+            }
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+
     public static void main(String[] args) {
         Solution202006 solution202006 = new Solution202006();
         String[] input1 = {"flower", "flow", "flight"};
@@ -578,6 +720,19 @@ public class Solution202006 {
         System.out.println("threesum equals zero ---> " + solution202006.threeSum(nums));
         int[] heights = new int[] {1,8,6,2,5,4,8,3,7};
         System.out.println("maxArea is ---> " + solution202006.maxArea(heights));
+
+
+        String version1 = "1.0";
+        String version2 = "1.0.0";
+        System.out.println("\"" + version1 + "\" compare to \"" + version2 + "\" is " + solution202006.compareVersion(version1, version2));
+
+        target = 15;
+        nums = new int[]{1, 2, 3, 4, 5};
+        System.out.println("num =  " + solution202006.minSubArrayLen2(target, nums));
+
+        target = 7;
+        nums = new int[]{2,3,1,2,4,3};
+        System.out.println("num =  " + solution202006.minSubArrayLen2(target, nums));
     }
 
 }
