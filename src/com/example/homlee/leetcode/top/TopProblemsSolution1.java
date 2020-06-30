@@ -126,6 +126,20 @@ public class TopProblemsSolution1 {
         heap[j] = tmp;
     }
 
+    public int findKthLargest1(int[] nums, int k) {
+        int[] heap = new int[k + 1];
+        for (int i = 0; i < nums.length; i++) {
+            int num = nums[i];
+            if (!insert(heap, num)) {
+                if (num > heap[1]) {
+                    replaceTop(heap, num);
+                }
+            }
+        }
+
+        return heap[1];
+    }
+
 
     public static void main(String[] args) {
         TopProblemsSolution1 solution1 = new TopProblemsSolution1();
