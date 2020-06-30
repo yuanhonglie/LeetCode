@@ -1,9 +1,23 @@
 package com.example.homlee.leetcode.top;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class TopProblemsSolution1 {
+    Map<Character, Integer> mRomanMap = new HashMap<>();
+    public TopProblemsSolution1() {
+        mRomanMap.put('I', 1);
+        mRomanMap.put('V', 5);
+        mRomanMap.put('X', 10);
+        mRomanMap.put('L', 50);
+        mRomanMap.put('C', 100);
+        mRomanMap.put('D', 500);
+        mRomanMap.put('M', 1000);
+
+    }
 
     /**
      * leetcode 7. 整数反转
@@ -126,18 +140,62 @@ public class TopProblemsSolution1 {
         heap[j] = tmp;
     }
 
+    /**
+     * leetcode 215. 数组中的第K个最大元素
+     * 基于快速排序的分区思想的快速选择算法
+     * @param nums
+     * @param k
+     * @return
+     */
     public int findKthLargest1(int[] nums, int k) {
-        int[] heap = new int[k + 1];
-        for (int i = 0; i < nums.length; i++) {
-            int num = nums[i];
-            if (!insert(heap, num)) {
-                if (num > heap[1]) {
-                    replaceTop(heap, num);
-                }
+        return partition(nums, 0, nums.length-1, k);
+    }
+
+    int partition(int[] nums, int p, int r, int k) {
+        if (r == p) {
+            return -1;
+        }
+        int pivot = nums[r];
+
+        int i = p;
+        for (int j = p; j < r; j++) {
+            if (nums[j] > pivot) {
+                swap(nums, i, j);
+                i++;
             }
         }
+        if (i == k-1) {
+            return pivot;
+        } else {
+            swap(nums, i, r);
+            if (i > k-1) {
+                return partition(nums, p, i-1, k);
+            } else {
+                return partition(nums, i+1, r, k);
+            }
+        }
+    }
 
-        return heap[1];
+    /**
+     * leetcode 13 罗马数字转整数
+     * @param s
+     * @return
+     */
+    public int romanToInt(String s) {
+        int last = 0;
+        int sum = 0;
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int num = mRomanMap.get(s.charAt(i));
+            sum += num < last ? -num : num;
+            last = num;
+        }
+
+        return sum;
+    }
+
+    public List<String> letterCombinations(String digits) {
+
+        return null;
     }
 
 
@@ -146,8 +204,12 @@ public class TopProblemsSolution1 {
         int num = -120;
         System.out.println("reverse \"" + num + "\" ---> " + solution1.reverse1(num));
 
+        String roman = "MCMXCIV";
+        System.out.println("\"" + roman + "\" = " + solution1.romanToInt(roman));
+
         int[] nums = new int[]{3,2,1,5,6,4};
         System.out.println("findKthLargest: " + solution1.findKthLargest(nums, 2));
     }
+
 
 }
