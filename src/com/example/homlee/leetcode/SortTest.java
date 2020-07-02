@@ -59,9 +59,51 @@ public class SortTest {
 
     //归并排序
     public void mergeSort(int[] array) {
-        
+        mergeSort(array, 0, array.length - 1);
     }
 
+    private void mergeSort(int[] array, int p, int r) {
+        if (p >= r) {
+            return;
+        }
+
+        int q = (p + r) / 2;
+        mergeSort(array, p, q);
+        mergeSort(array, q + 1, r);
+
+        merge(array, p, q, r);
+    }
+
+    private void merge(int[] array, int p, int q, int r) {
+        int[] tmp = new int[r - p + 1];
+        int i = p;
+        int j = q+1;
+        int k = 0;
+        while (i <= q && j <= r) {
+            if (array[i] <= array[j]) {
+                tmp[k++] = array[i++];
+            } else {
+                tmp[k++] = array[j++];
+            }
+        }
+
+
+        int start = i;
+        int end = q;
+        if (j <= r) {
+            start = j;
+            end = r;
+        }
+
+        while (start <= end) {
+            tmp[k++] = array[start++];
+        }
+
+        j = p;
+        for (i = 0; i < tmp.length; i++) {
+            array[j++] = tmp[i];
+        }
+    }
     //快速排序
     public void quickSort(int[] array) {
 
@@ -97,6 +139,10 @@ public class SortTest {
         System.out.println("selectionSort:");
         array = createNewArray();
         sort.selectionSort(array);
+        println(array);
+        System.out.println("mergeSort:");
+        array = createNewArray();
+        sort.mergeSort(array);
         println(array);
     }
 }
