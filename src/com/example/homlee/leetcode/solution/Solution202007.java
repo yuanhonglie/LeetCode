@@ -1,5 +1,7 @@
 package com.example.homlee.leetcode.solution;
 
+import com.example.homlee.leetcode.data.TreeNode;
+
 public class Solution202007 {
 
     /**
@@ -57,9 +59,63 @@ public class Solution202007 {
     }
 
 
+
+    /**
+     * 20200701
+     * leetcode 718. 最长重复子数组
+     * 给两个整数数组 A 和 B ，返回两个数组中公共的、长度最长的子数组的长度。
+     */
+    public int findCommonArrayLength(int[] A, int[] B) {
+        int max = 0;
+        int n1 = A.length+1;
+        int n2 = B.length+1;
+        int[][] dp = new int[n1][n2];
+
+        for (int i = 1; i < n1; i++) {
+            for (int j = 1; j < n2; j++) {
+                if (A[i-1] == B[j-1]) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                } else {
+                    dp[i][j] = 0;
+                }
+
+                max = dp[i][j] > max ? dp[i][j] : max;
+            }
+        }
+        return max;
+    }
+
+    /**
+     * leetcode 108. 将有序数组转换为二叉搜索树
+     */
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return buildTree(nums, 0, nums.length-1);
+    }
+
+    private TreeNode buildTree(int[] nums, int left, int right) {
+        if (left > right) {
+            return null;
+        }
+
+        int mid = (left + right) / 2;
+        TreeNode node = new TreeNode(nums[mid]);
+        node.left = buildTree(nums, left, mid-1);
+        node.right = buildTree(nums, mid+1, right);
+        return node;
+    }
+
+
+
     public static void main(String[] args) {
         Solution202007 solution202007 = new Solution202007();
         int[][] matrix = {{1,5,9},{10,11,13},{12,13,15}};
         System.out.println("num = " + solution202007.kthSmallest(matrix, 8));
+
+        int[] a = {0,1,1,1,1};
+        int[] b = {1,0,1,0,1};
+        System.out.println("common sub array is " + solution202007.findCommonArrayLength(a, b));
+        int[] sortedArray = {-10, -3, 0, 5, 9};
+        TreeNode tree = solution202007.sortedArrayToBST(sortedArray);
+        System.out.println("Binary Search Tree ");
     }
 }
