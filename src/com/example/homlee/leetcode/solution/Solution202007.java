@@ -2,6 +2,8 @@ package com.example.homlee.leetcode.solution;
 
 import com.example.homlee.leetcode.data.TreeNode;
 
+import java.util.Stack;
+
 public class Solution202007 {
 
     /**
@@ -106,6 +108,66 @@ public class Solution202007 {
 
 
 
+
+    /**
+     * leetcode 32. 最长有效括号
+     * @param s
+     */
+    public int longestValidParentheses(String s) {
+        Stack<Integer> stack = new Stack<>();
+        int i = 0;
+        int max = 0;
+        stack.push(-1);
+        while (i < s.length()) {
+            char c = s.charAt(i);
+            if (c == '(') {
+                stack.push(i);
+            } else {
+                stack.pop();
+                if (stack.isEmpty()) {
+                    stack.push(i);
+                } else {
+                    max = Math.max(max, i - stack.peek());
+                }
+            }
+            i++;
+        }
+        return max;
+    }
+
+    /**
+     * leetcode 32. 最长有效括号（动态规划）
+     * @param s
+     * @return
+     */
+    public int longestValidParentheses1(String s) {
+        int max = 0;
+        int[] dp = new  int[s.length()];
+        for (int i = 1; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ')') {
+                if (c == ')' && s.charAt(i-1) == '(') {
+                    dp[i] = (i >= 2 ? dp[i-2] : 0) + 2;
+                } else if(i - dp[i-1] > 0 && s.charAt(i - dp[i-1] - 1) == '(') {
+                    dp[i] = dp[i-1] + (i-dp[i-1] >= 2 ? dp[i-dp[i-1]-2] : 0) + 2;
+                }
+            }
+            max = Math.max(max, dp[i]);
+        }
+
+        return max;
+    }
+
+    /**
+     * leetcode 44. 通配符匹配
+     * @param s
+     * @param p
+     * @return
+     */
+    public boolean isMatch(String s, String p) {
+        return false;
+    }
+
     public static void main(String[] args) {
         Solution202007 solution202007 = new Solution202007();
         int[][] matrix = {{1,5,9},{10,11,13},{12,13,15}};
@@ -117,5 +179,8 @@ public class Solution202007 {
         int[] sortedArray = {-10, -3, 0, 5, 9};
         TreeNode tree = solution202007.sortedArrayToBST(sortedArray);
         System.out.println("Binary Search Tree ");
+
+        String text = ")(()(())";
+        System.out.println("longestValidParentheses of \"" + text + "\" is " + solution202007.longestValidParentheses1(text));
     }
 }
