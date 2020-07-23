@@ -1,0 +1,358 @@
+### 蓝牙通信
+Bluetooth Low Energy (BLE) 是在Bluetooth 4.0中引入的。Android 4.3开始引入，Android4.4修复了很多bug，才稳定
+现在低功耗蓝牙（BLE）连接都是建立在 GATT (Generic Attribute Profile) 协议之上。GATT 是一个在蓝牙连接之上的发送和接收很短的数据段的通用规范，这些很短的数据段被称为属性（Attribute）
+
+GAP是Generic Access Profile的首字母缩写，它控制蓝牙中的连接和广告。GAP使您的设备对外界可见，并确定两个设备如何（或不能）彼此交互。
+
+低功耗蓝牙设备分为中央设备和外围设备：
+1)外围设备一次只能连接到一个中央设备（如手机），但是中央设备可以连接到多个外围设备。
+2)外围设备称为GATT服务器，它保存ATT查找数据和服务及特征定义，而GATT客户端则向服务器发送请求。
+
+蓝牙BLE中的外围设备通过两种方式向外广播数据：Advertising Data Payload（广播数据）和Scan Response Data Payload（扫描回复），每种数据最长可以包括31个字节。
+其中广播数据是必需的，因为外设必需不停的向外广播，让中心设备知道它的存在。扫描回复是可选的，中心设备可以向外设请求扫描回复，这里包含一些设备额外的信息，例如设备的名字。
+
+Services与Charateristics
+|---------------------------|
+|		   PROFILE			|
+|	|--------------------|  |
+|	|	   SERVICES		 |  |
+|	| |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	|	   SERVICES		 |  |
+|	| |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	| | CHARATERISTICS | |  |
+|   | |----------------| |	|
+|	|--------------------|  |
+|---------------------------|
+
+数据包长度（MTU）：BLE4.2之前，默认是23字节，其中包括2字节的handle值和1字节的Operation码，所以留给应用层的数据长度只有20个字节。
+BLE4.2中，MTU已经扩展到247个字节，除去3个字节，留给应用层的就是244个字节，大大提高了传输效率。
+长/短包传输；
+为了兼容BLE4.2之前的设备，BLE 4.2中MTU的默认大小仍然是23字节，但可以在连接后进行修改。当peripheral和central建立连接之后，central设备会发送 [ATT_Exchange_MTU_Req][5] 的请求包，包含了central所支持的MTU大小；peripheral会回应 [ATT_Exchange_MTU_Rsp][6] 应答包包含peripheral所支持的MTU大小，取两者之间最小的MTU作为两者通信的MTU。
+
+BLE的4.0理论蓝牙传输速度1MB/s, BLE5.0是2MB/s
+
+权限：
+Manifest.permission.BLUETOOTH
+Manifest.permission.BLUETOOTH_ADMIN
+Manifest.permission.ACCESS_COARSE_LOCATION
+Manifest.permission.ACCESS_FINE_LOCATION
+
+扫描：
+
+Android 5.0-
+mBluetoothAdapter.startLeScan(postUUIDFilterMode ? null : uuids, mScanCallback);
+private BluetoothAdapter.LeScanCallback mScanCallback = new BluetoothAdapter.LeScanCallback() {
+	@Override
+	public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+		handleScanResult(bluetoothDevice, i, bytes);
+	}
+};
+
+Android 5.0+
+mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+mBluetoothLeScanner.startScan(null, scanSettings, mScanCallback2);
+ScanCallback mScanCallback2 = new ScanCallback() {
+	@Override
+	public void onScanResult(int callbackType, ScanResult result) {
+		handleScanResult(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
+	}
+
+	@Override
+	public void onBatchScanResults(List<ScanResult> results) {
+		super.onBatchScanResults(results);
+	}
+
+	@Override
+	public void onScanFailed(int errorCode) {
+		super.onScanFailed(errorCode);
+	}
+};
+	
+
+监听蓝牙状态变化广播
+mContext.registerReceiver(mReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+
+Android BLE相关API
+BluetoothDeivce：蓝牙设备，代表一个具体的蓝牙外设。
+BluetoothGatt：通用属性协议，定义了BLE通讯的基本规则和操作
+BluetoothGattCallback：GATT通信回调类，用于回调的各种状态和结果。
+BluetoothGattService：服务，由零或多个特征组构成。
+BluetoothGattCharacteristic：特征，里面包含了一组或多组数据，是GATT通信中的最小数据单元。
+BluetoothGattDescriptor：特征描述符，对特征的额外描述，包括但不仅限于特征的单位，属性等。
+
+蓝牙管理器：BluetoothManager = Context#getSystemService(Context#BLUETOOTH_SERVICE)；
+蓝牙适配器：BluetoothAdapter BluetoothManager#getAdapter();
+
+蓝牙设备：BluetoothDevice
+连接蓝牙设备：BluetoothDevice#connectGatt(Context context, boolean autoConnect, BluetoothGattCallback callback)
+蓝牙回调：BluetoothGattCallback
+
+连接蓝牙设备后，返回 蓝牙BluetoothGatt
+
+BluetoothGattService BluetoothGatt#getService(UUID uuid)
+BluetoothGattCharacteristic BluetoothGattService#getCharacteristic(UUID uuid)
+BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic characteristic)
+
+public abstract class BluetoothGattCallback {
+	
+	//发现服务，对某个特征值设置监听
+	public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+		//监听外设特征值改变
+		​//无论是对外设写入新值，还是读取外设特定Characteristic的值，其实都只是单方通信。如果需要双向通信，可以在BluetoothGattCallback#onServicesDiscovered中对某个特征值设置监听（前提是该Characteristic具有NOTIFY属性）：
+		//设置订阅notificationGattCharacteristic值改变的通知
+		mBluetoothGatt.setCharacteristicNotification(notificationGattCharacteristic, true);
+		//获取其对应的通知Descriptor
+		BluetoothGattDescriptor descriptor = notificationGattCharacteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+		if (descriptor != null){ 
+			//设置通知值
+			descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+			boolean descriptorResult = mBluetoothGatt.writeDescriptor(descriptor);
+		}
+    }
+
+	//外设修改自己的特征值进行回复时，手机端会触发BluetoothGattCallback#onCharacteristicChanged()方法，获取到外设回复的值，从而实现双向通信。
+	public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+		if (status == BluetoothGatt.GATT_SUCCESS) {
+			//获取外设修改的特征值
+			byte[] value = characteristic.getValue()
+			//对特征值进行解析
+			
+		｝
+	}			
+}
+
+
+经典蓝牙：
+1）扫描设备：BluetoothAdapter#startDiscovery()，通过注册广播来接收回调
+IntentFilter intentFilter = new IntentFilter();
+intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+RyBluetoothManager.getInstance().getContext().registerReceiver(receiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+低功耗蓝牙（BLE）：BluetoothAdapter#startLeScan() or BluetoothLeScanner#startScan()
+
+
+### 笔记视图绘制逻辑
+1. Matrix的坐标转换
+
+1)在onLayout方法中初始化Matrix：缩放，水平/垂直偏移
+```java
+	Matrix mScaleMatrix = new Matrix();
+	mScaleMatrix.reset();
+	mScaleMatrix.postScale(mInitScale, mInitScale);
+	//如果是平板设备，则向右偏移
+	if (UiUtils.isTablet(this.getContext().getResources())) {
+		mScaleMatrix.postTranslate(mCenterX - (float) IPenConfig.W * mInitScale / 2, 0);
+	} else {
+		mScaleMatrix.postTranslate(0, mToolBarHeight);
+	}
+```
+
+2)获取缩放系数
+```java
+    /**
+     * 获得当前的缩放比例
+     *
+     * @return 当前的缩放比例
+     */
+    public float getScale() {
+        mScaleMatrix.getValues(matrixValues);
+        return matrixValues[Matrix.MSCALE_X];
+    }
+```
+
+3)绘制
+```java
+	canvas.save();
+	//把Matrix的变换应用到canvas上的所有对象：缩放，水平/垂直偏移
+	canvas.concat(mScaleMatrix);
+	
+	....
+	
+	canvas.restore();
+```
+
+4)触摸坐标映射
+a. 因为显示的图片大小是原图经过缩放的，所以当触摸绘制时，要将触摸的坐标映射到原图坐标中进行绘制，所以进行坐标转换：
+```java
+    /**
+     * 根据当前图片的Matrix获得图片的范围
+     *
+     * @return 图片的范围 {@link android.graphics.Rect}
+     */
+    private RectF getMatrixRectF() {
+        mRect.set(0, 0, IPenConfig.W, IPenConfig.H);
+        //将matrix值映射到RectF中
+        mScaleMatrix.mapRect(mRect);
+        return mRect;
+    }
+	
+	    float eventX = (motionEvent.getX(0) - rectF.left) / getScale();
+        float eventY = (motionEvent.getY(0) - rectF.top) / getScale();
+	
+```
+触摸屏幕绘制时，是通过转换后的坐标eventX、eventY来绘制的。
+b. 手写本绘制时，坐标转换逻辑与触摸屏的不一样：
+```java
+        float px = x * IPenConfig.SCALE;
+        float py = y * IPenConfig.SCALE;
+```
+这里是通过手写本的分辨率与笔记设计稿大小，计算的一个固定缩放系数IPenConfig.SCALE，来进行坐标转换的。
+
+2. 笔记绘制：二阶贝塞尔曲线拟合+变宽画笔绘制
+在Bitmap中进行绘制
+
+
+
+3. 手势与缩放回弹动画；
+构造ScaleGestureDetector时，需要传入ScaleGestureDetector.OnScaleGestureListener对象，在onScale方法中获取缩放系数，并修改显示矩阵mScaleMatrix。
+
+a. 初始化ScaleGestureDetector对象：
+```java
+	mScaleGestureDetector = new ScaleGestureDetector(context, this);
+```
+
+b. 在View的onTouch回调方法中，将事件传入
+```java
+
+	@Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+	
+		
+		return mScaleGestureDetector.onTouchEvent(motionEvent);
+	}
+	
+```
+
+c. 在ScaleGestureDetector.OnScaleGestureListener对象的接口方法会接收回调
+```java
+    public interface OnScaleGestureListener {
+        
+        public boolean onScale(ScaleGestureDetector detector) {
+			//获取手势放大系数
+			float scaleFactor = detector.getScaleFactor();
+			//设置缩放比例
+			mScaleCenterPoint.set(detector.getFocusX(), detector.getFocusY());
+			//设置缩放系数与缩放中心点
+			mScaleMatrix.postScale(scaleFactor, scaleFactor, detector.getFocusX(), detector.getFocusY());
+		}
+
+        public boolean onScaleBegin(ScaleGestureDetector detector);
+
+        public void onScaleEnd(ScaleGestureDetector detector);
+    }
+```
+
+4. 撤销与重做；
+每一笔绘制后都会生成一个完整的笔记Bitmap，这个Bitmap会放到一个定长的列表UndoList中，当用户点击撤销时，把UndoList中最后一个Bitmap添加到RedoStack中。当用户点击重做时，将RedoStack的栈顶元素弹出，并绘制到画布上，并把这一笔加到UndoList中。如果绘制重新绘制一笔，需要将这笔放到UndoList中，并清空RedoStack中的元素。
+
+
+5. 笔记数据持久化；
+每一笔是一个DrawingPath，DrawingPath内部采用byte数组存储；x,y,t,p。其中t用4个字节表示，其他三个变量用2个字节表示。
+一个笔记是一个Note对象，Note对象中保存了一个DrawingPath列表，每一笔是一个DrawingPath对象；
+
+6. 自定义View；
+
+
+7. 如何实现橡皮檫功能？
+
+
+
+### 网络通信okHttp+Retrofit
+
+
+
+### 主流三方库框架分析：greenDao，glide，leakcanary，dagger
+
+
+
+### Android框架相关：动画，activity启动流程，handler消息分发机制，绘制流程与自定义View，事件分发机制，Binder，Service
+#### 动画
+1. 属性动画
+通过反射的方式获取对象的setter和getter方法，不断地调用setter方法来更新属性值。
+PropertyValuesHolder#setupSetterOrGetter(Class targetClass, HashMap<Class, HashMap<String, Method>> propertyMapMap, String prefix, Class valueType)
+PropertyValuesHolder#getPropertyFunction(Class targetClass, String prefix, Class valueType)
+动画持续时间
+动画插值方式
+动画重复次数
+重复行为
+刷新率
+
+ValueAnimator只能在有looper的线程中启动；
+每个线程有一个ThreadLocal对象的AnimationHandler，AnimationHandler通过MyFrameCallbackProvider来产生心跳，每隔10一次心跳，回调属性动画更新属性值。
+MyFrameCallbackProvider是通过单例Choreographer，通过调用FrameCallback的doFrame(long frameTimeNanos)来渲染每一帧的。
+
+属性动画为什么要在有Looper的线程中执行？因为在动画更新引擎Choreographer中，使用了Handler了来实现定时的。而构造Handler需要有Looper；
+
+2. 视图/补间动画：
+
+透明度：AlphaAnimation
+旋转：RotateAnimation
+位移；TranslateAnimation
+缩放：ScaleAnimation
+动画可以通过xml或代码来定义
+
+View#startAnimation(Animation)
+View#clearAnimation()
+View#setAnimation(Animation)
+
+3. 帧动画
+帧动画就是顺序播放一组预先定义好的图片，就类似于我们观看视频，就是一张一张的图片连续播放。
+帧动画的使用很简单，总共就两个步骤：
+1、在res/drawable目录下定义一个XML文件，根节点为系统提供的animation-list，然后放入定义更好的图片；
+2、使用AnimationDrawable类播放第一步定义好的Drawable中的图片，形成动画效果；
+```java
+    Button button = (Button) findViewById(R.id.bt_001);
+    button.setBackgroundResource(R.drawable.frame_animation);//把Drawable设置为button的背景
+    //拿到这个我们定义的Drawable，实际也就是AnimationDrawable
+    AnimationDrawable animationDrawable = (AnimationDrawable) button.getBackground();
+    animationDrawable.start();//开启动画
+```
+#### Activity启动流程
+
+#### handler消息分发机制
+
+#### 绘制流程与自定义View
+
+#### 事件分发机制
+View#dispatchTouchEvent(MotionEvent event)
+View#onTouch()
+View#onTouchEvent() ---> onClick()(ACTION_UP)
+
+ViewGroup#dispatchTouchEvent(MotionEvent e)
+ViewGroup#onInterceptTouchEvent(MotionEvent e)
+View#onTouch()
+View#onTouchEvent() ---> onClick()(ACTION_UP)
+
+View#dispatchTouchEvent(MotionEvent event)
+ViewGroup#onTouch()
+ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
+
+
+
+#### Binder
+
+#### Service
+
+### 应用性能优化
+
+### 虚拟机相关：内存，类加载，方法分派机制，线程安全
+
+### 算法与数据结构
+
+### 组件化，热修复，gradle插件
+
+### 编码规范相关：checkstyle，lint，gitlab
+
+### 设计模式
+
+### 多线程，线程池

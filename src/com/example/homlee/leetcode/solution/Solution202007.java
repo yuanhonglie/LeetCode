@@ -339,6 +339,28 @@ public class Solution202007 {
         return dp[n];
     }
 
+    /**
+     * leetcode 120.三角形最小路径和
+     * @param triangle
+     * @return
+     */
+    public int minimumTotal(List<List<Integer>> triangle) {
+        int size = triangle.size();
+        int dp[] = new int[size];
+
+        dp[0] = triangle.get(0).get(0);
+        for (int i = 1; i < size; i++) {
+            List<Integer> row = triangle.get(i);
+            int min = row.get(0) + dp[i-1];
+            for (int j = 1; j < row.size(); j++) {
+                min = Math.min(min, row.get(j) + dp[i-1]);
+            }
+            dp[i] = min;
+        }
+
+        return dp[size - 1];
+    }
+
 
     public static void main(String[] args) {
         Solution202007 solution202007 = new Solution202007();
