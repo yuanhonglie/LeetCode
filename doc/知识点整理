@@ -322,8 +322,21 @@ View#setAnimation(Animation)
 #### handler消息分发机制
 
 #### 绘制流程与自定义View
+1.Activity#setContentView()源码分析总结 --> PhoneWindow#setContentView()
+a. 创建一个DecorView的对象mDecor，该mDecor对象将作为整个应用窗口的根视图。
+b. 依据Feature等style theme创建不同的窗口修饰布局文件，并且通过findViewById获取Activity布局文件该存放的地方（窗口修饰布局文件中id为content的FrameLayout）。
+c. 将Activity的布局文件添加至id为content的FrameLayout内。
+d. 当setContentView设置显示OK以后会回调Activity的onContentChanged方法。Activity的各种View的findViewById()方法等都可以放到该方法中，系统会帮忙回调。
+e. 当我们自定义View时在构造函数inflate一个xml后可以实现onFinishInflate这个方法一些自定义的逻辑。
+2.View的绘制过程：测量measure、布局layout、绘制draw三个过程
+1)测量：
+2)布局：
+3)绘制：
+https://blog.csdn.net/yanbober/article/details/46128379
 
 #### 事件分发机制
+Activity#dispatchTouchEvent() --> PhoneWindow#superDispatchTouchEvent() --> DecorView#superDispatchTouchEvent() --> FrameLayout#dispatchTouchEvent()
+
 View#dispatchTouchEvent(MotionEvent event)
 View#onTouch()
 View#onTouchEvent() ---> onClick()(ACTION_UP)
@@ -333,11 +346,16 @@ ViewGroup#onInterceptTouchEvent(MotionEvent e)
 View#onTouch()
 View#onTouchEvent() ---> onClick()(ACTION_UP)
 
-View#dispatchTouchEvent(MotionEvent event)
+super(View)#dispatchTouchEvent(MotionEvent event)
 ViewGroup#onTouch()
 ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 
-
+1. onTouch和onTouchEvent有什么区别，又该如何使用？
+从源码中可以看出，这两个方法都是在View的dispatchTouchEvent中调用的，onTouch优先于onTouchEvent执行。如果在onTouch方法中通过返回true将事件消费掉，onTouchEvent将不会再执行。
+另外需要注意的是，onTouch能够得到执行需要两个前提条件，第一mOnTouchListener的值不能为空，第二当前点击的控件必须是enable的。因此如果你有一个控件是非enable的，那么给它注册onTouch事件将永远得不到执行。对于这一类控件，如果我们想要监听它的touch事件，就必须通过在该控件中重写onTouchEvent方法来实现。
+2. Android事件分发是先传递到ViewGroup，再由ViewGroup传递到View的。
+3. 在ViewGroup中可以通过onInterceptTouchEvent方法对事件传递进行拦截，onInterceptTouchEvent方法返回true代表不允许事件继续向子View传递，返回false代表不对事件进行拦截，默认返回false。
+4. 子View中如果将传递的事件消费掉，ViewGroup中将无法接收到任何事件。
 
 #### Binder
 
