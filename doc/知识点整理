@@ -209,7 +209,9 @@ b. 手写本绘制时，坐标转换逻辑与触摸屏的不一样：
 这里是通过手写本的分辨率与笔记设计稿大小，计算的一个固定缩放系数IPenConfig.SCALE，来进行坐标转换的。
 
 2. 笔记绘制：二阶贝塞尔曲线拟合+变宽画笔绘制
-在Bitmap中进行绘制
+a. 在Bitmap中进行绘制，提升绘制效率；
+b. 采用二阶贝塞尔曲线拟合，选取相邻两个轨迹点的中点作为二阶贝塞尔曲线的控制点；
+c. 根据绘制的速度和压力值，转换成笔宽值，以实现笔锋效果。
 
 
 
@@ -329,10 +331,48 @@ c. 将Activity的布局文件添加至id为content的FrameLayout内。
 d. 当setContentView设置显示OK以后会回调Activity的onContentChanged方法。Activity的各种View的findViewById()方法等都可以放到该方法中，系统会帮忙回调。
 e. 当我们自定义View时在构造函数inflate一个xml后可以实现onFinishInflate这个方法一些自定义的逻辑。
 2.View的绘制过程：测量measure、布局layout、绘制draw三个过程
-1)测量：
-2)布局：
-3)绘制：
+ViewRootImpl#performTraversals()
+1)测量：measure过程主要就是从顶层父View向子View递归调用view.measure方法（measure中又回调onMeasure方法）的过程。具体measure核心主要有如下几点：
+a. MeasureSpec（View的内部类）测量规格为int型，值由高2位规格模式specMode和低30位具体尺寸specSize组成。其中specMode只有三种值：
+MeasureSpec.EXACTLY //确定模式，父View希望子View的大小是确定的，由specSize决定；
+MeasureSpec.AT_MOST //最多模式，父View希望子View的大小最多是specSize指定的值；
+MeasureSpec.UNSPECIFIED //未指定模式，父View完全依据子View的设计值来决定； 
+View的measure方法是final的，不允许重载，View子类只能重载onMeasure来完成自己的测量逻辑。
+b. 最顶层DecorView测量时的MeasureSpec是由ViewRootImpl中getRootMeasureSpec方法确定的（LayoutParams宽高参数均为MATCH_PARENT，specMode是EXACTLY，specSize为物理屏幕大小）。
+c. ViewGroup类提供了measureChild，measureChild和measureChildWithMargins方法，简化了父子View的尺寸计算。
+d. 只要是ViewGroup的子类就必须要求LayoutParams继承子MarginLayoutParams，否则无法使用layout_margin参数。
+e. View的布局大小由父View和子View共同决定。
+f. 使用View的getMeasuredWidth()和getMeasuredHeight()方法来获取View测量的宽高，必须保证这两个方法在onMeasure流程之后被调用才能返回有效值。
+
+2)布局：layout也是从顶层父View向子View的递归调用view.layout方法的过程，即父View根据上一步measure子View所得到的布局大小和布局参数，将子View放在合适的位置上。具体layout核心主要有以下几点：
+a. View.layout方法可被重载，ViewGroup.layout为final的不可重载，ViewGroup.onLayout为abstract的，子类必须重载实现自己的位置逻辑。
+b. measure操作完成后得到的是对每个View经测量过的measuredWidth和measuredHeight，layout操作完成之后得到的是对每个View进行位置分配后的mLeft、mTop、mRight、mBottom，这些值都是相对于父View来说的。
+c. 凡是layout_XXX的布局属性基本都针对的是包含子View的ViewGroup的，当对一个没有父容器的View设置相关layout_XXX属性是没有任何意义的。
+d. 使用View的getWidth()和getHeight()方法来获取View测量的宽高，必须保证这两个方法在onLayout流程之后被调用才能返回有效值。
+
+3)绘制：绘制过程就是把View对象绘制到屏幕上，整个draw过程需要注意如下细节：
+a. 如果该View是一个ViewGroup，则需要递归绘制其所包含的所有子View。
+b. View默认不会绘制任何内容，真正的绘制都需要自己在子类中实现。
+c. View的绘制是借助onDraw方法传入的Canvas类来进行的。
+d. 区分View动画和ViewGroup布局动画，前者指的是View自身的动画，可以通过setAnimation添加，后者是专门针对ViewGroup显示内部子视图时设置的动画，可以在xml布局文件中对ViewGroup设置layoutAnimation属性（譬如对LinearLayout设置子View在显示时出现逐行、随机、下等显示等不同动画效果）。
+e. 在获取画布剪切区（每个View的draw中传入的Canvas）时会自动处理掉padding，子View获取Canvas不用关注这些逻辑，只用关心如何绘制即可。
+f. 默认情况下子View的ViewGroup.drawChild绘制顺序和子View被添加的顺序一致，但是你也可以重载ViewGroup.getChildDrawingOrder()方法提供不同顺序。
+
 https://blog.csdn.net/yanbober/article/details/46128379
+
+ActivityThread#handleResumeActivity() -> WindowManagerImpl#addView() -> WindowManagerGlobal#addView() -> ViewRootImpl#setView() --> ViewRootImpl#requestLayout()。
+在ViewRootImpl#setView () 会通过跨进程的方式向 WindowManagerService 发起一个调用，将 DecorView 最终添加到 Window 上。
+这就是它们三者的关系，一层一层的往下调用。（WindowManagerImpl 是 WindowManager 的实现类）
+
+Activity的attach中生成PhoneWindow对象;
+setContentView中初始化DecorView（ViewGroup）;
+在LayoutInflater进行对布局文件的解析之后更加解析的数据
+根据解析出的数据执行View的构造函数进行View的构造，同时生成ViewTree。
+
+####Activity的布局文件是如何加载显示出来的？分三步：
+1. 在Activity启动时onActivity()方法中，调用setContentView()。在PhoneWindow中，调用LayoutInflater，将布局xml文件构建成一颗以DecorView为根视图的视图树。
+2. ActivityThread#handleResumeActivity() -> WindowManagerImpl#addView() -> WindowManagerGlobal#addView() -> ViewRootImpl#setView() -> ViewRootImpl#requestLayout()。将视图树加载到窗口中，并创建了ViewRootImpl，作为操作视图树的入口。
+3. 视图树的绘制是从根视图开始，经过测量、布局、绘制三个环节，每个环节都是递归调用，最终将视图绘制在窗口上。
 
 #### 事件分发机制
 Activity#dispatchTouchEvent() --> PhoneWindow#superDispatchTouchEvent() --> DecorView#superDispatchTouchEvent() --> FrameLayout#dispatchTouchEvent()
@@ -374,3 +414,5 @@ ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 ### 设计模式
 
 ### 多线程，线程池
+
+### ANR异常
