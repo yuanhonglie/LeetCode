@@ -210,10 +210,31 @@ b. 手写本绘制时，坐标转换逻辑与触摸屏的不一样：
 
 2. 笔记绘制：二阶贝塞尔曲线拟合+变宽画笔绘制
 a. 在Bitmap中进行绘制，提升绘制效率；
+创建一个Bitmap，在Bitmap中进行绘制，View#onDraw()方法中绘制Bitmap图片即可；
 b. 采用二阶贝塞尔曲线拟合，选取相邻两个轨迹点的中点作为二阶贝塞尔曲线的控制点；
+二阶贝塞尔曲线公式：B(t) = (1-t)^2*P0 + 2t(1-t)*P1 + t^2*P2, t = [0, 1]
+
 c. 根据绘制的速度和压力值，转换成笔宽值，以实现笔锋效果。
 
-
+d. 贴图的颜色是如何实现的？
+贴图颜色采用了Android的Canvas的融合模式：PorterDuff.Mode.SRC_IN
+```java
+    public static Bitmap tintBitmap(Bitmap inBitmap, int tintColor) {
+        if (inBitmap == null) {
+            return null;
+        }
+        Canvas canvas = new Canvas(inBitmap);
+        canvas.drawColor(tintColor, PorterDuff.Mode.SRC_IN);
+        return inBitmap;
+    }
+```
+橡皮檫的实现
+```java
+        mEraser = DrawUtils.createPaint();
+        DrawUtils.initializePaint(mEraser, Color.TRANSPARENT, IPenConfig.DEFAULT_ALPHA,
+                IPenConfig.DEFAULT_ERASER_WIDTH, false);
+        mEraser.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+```
 
 3. 手势与缩放回弹动画；
 构造ScaleGestureDetector时，需要传入ScaleGestureDetector.OnScaleGestureListener对象，在onScale方法中获取缩放系数，并修改显示矩阵mScaleMatrix。
@@ -263,9 +284,7 @@ c. 在ScaleGestureDetector.OnScaleGestureListener对象的接口方法会接收�
 一个笔记是一个Note对象，Note对象中保存了一个DrawingPath列表，每一笔是一个DrawingPath对象；
 
 6. 自定义View；
-
-
-7. 如何实现橡皮檫功能？
+重写onMeasure()方法，调用setMeasuredDimension()方法；
 
 
 
@@ -320,8 +339,30 @@ View#setAnimation(Animation)
     animationDrawable.start();//开启动画
 ```
 #### Activity启动流程
+android上一个应用的入口应该是ActivityThread类的main方法就行了
+
+
 
 #### handler消息分发机制
+Message：消息类，存储消息信息，采用链表结构存储，按消息的处理时间先后进行排序；
+MessageQueue：消息队列，主要方法：enquequeMessage()将消息加入到队列中，next()获取下一个可以执行发送的消息；
+Looper：Looper#prepare()为线程创建消息队列，Looper#loop()进入消息循环，取出消息分发给对应的Handler处理。
+Handler：消息发送、处理类；
+
+1.Handler与Looper实例化总结
+a. 在主线程中可以直接创建Handler对象，而在子线程中需要先调用Looper.prepare()才能创建Handler对象，否则运行抛出”Can’t create handler inside thread that has not called Looper.prepare()”异常信息。
+b. 每个线程中最多只能有一个Looper对象，否则抛出异常。
+c. 可以通过Looper.myLooper()获取当前线程的Looper实例，通过Looper.getMainLooper()获取主（UI）线程的Looper实例。
+d. 一个Looper只能对应了一个MessageQueue。
+e. 一个线程中只有一个Looper实例，一个MessageQueue实例，可以有多个Handler实例。
+
+2. Handler发送消息：
+Handler#enqueueMessage() --> MessageQueue#enqueueMessage()
+使用Handler对象发送消息最终会调用到Handler#enqueueMessage()方法，此方法会调用到MessageQueue#enqueueMessage()，将Message对象加入到消息队列中，在MessageQueue中，消息采用链表结构进行存储。
+
+3.消息处理：
+Looper#loop() --> MessageQueue#next()  --> Handler#dispatchMessage()
+在子线程调用Looper#loop()之后，进入消息循环中，通过MessageQueue#next()方法从消息队列中取出消息进行处理。如果当前时间没有消息需要处理时，MessageQueue#next()会阻塞。判断当前是否有消息需要处理是通过判断当前时间与消息的处理时间进行比较，如果当前时间等于或大于消息处理时间时，就从MessageQueue#next()返回该消息。在Looper#loop()中，取到消息之后，会将消息交给Handler#dispatchMessage()方法进行处理。
 
 #### 绘制流程与自定义View
 1.Activity#setContentView()源码分析总结 --> PhoneWindow#setContentView()
@@ -401,18 +442,45 @@ ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 
 #### Service
 
+
+
 ### 应用性能优化
+
+
+
 
 ### 虚拟机相关：内存，类加载，方法分派机制，线程安全
 
+
+
+
 ### 算法与数据结构
+
+
+
 
 ### 组件化，热修复，gradle插件
 
+
+
+
 ### 编码规范相关：checkstyle，lint，gitlab
+
+
+
+
 
 ### 设计模式
 
+
+
+
 ### 多线程，线程池
 
+
+
+
 ### ANR异常
+
+
+
