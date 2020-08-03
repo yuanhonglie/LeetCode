@@ -210,11 +210,11 @@ b. 手写本绘制时，坐标转换逻辑与触摸屏的不一样：
 
 2. 笔记绘制：二阶贝塞尔曲线拟合+变宽画笔绘制
 a. 在Bitmap中进行绘制，提升绘制效率；
-创建一个Bitmap，在Bitmap中进行绘制，View#onDraw()方法中绘制Bitmap图片即可；
+创建一个Bitmap，在Bitmap中进行绘制，View#onDraw()方法中绘制Bitmap图片即可。
 b. 采用二阶贝塞尔曲线拟合，选取相邻两个轨迹点的中点作为二阶贝塞尔曲线的控制点；
-二阶贝塞尔曲线公式：B(t) = (1-t)^2*P0 + 2t(1-t)*P1 + t^2*P2, t = [0, 1]
-
+二阶贝塞尔曲线公式：B(t) = (1-t)^2*P0 + 2t(1-t)*P1 + t^2*P2, t = [0, 1]。
 c. 根据绘制的速度和压力值，转换成笔宽值，以实现笔锋效果。
+手写本书写是采用压力值转换成笔宽，而触摸书写是通过书写速度转换笔宽。
 
 d. 贴图的颜色是如何实现的？
 贴图颜色采用了Android的Canvas的融合模式：PorterDuff.Mode.SRC_IN
@@ -284,7 +284,19 @@ c. 在ScaleGestureDetector.OnScaleGestureListener对象的接口方法会接收�
 一个笔记是一个Note对象，Note对象中保存了一个DrawingPath列表，每一笔是一个DrawingPath对象；
 
 6. 自定义View；
-重写onMeasure()方法，调用setMeasuredDimension()方法；
+a. 重写onMeasure()方法，调用setMeasuredDimension()方法；确定视图的宽高。调用setMeasuredDimension()之后，getMeasuredWidth()和getMeasuredHeight()的值才是有效值。
+```java
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		//MeasureSpec（View的内部类）测量规格为int型，值由高2位规格模式specMode和低30位具体尺寸specSize组成。其中specMode只有三种值
+		//MeasureSpec.EXACTLY //确定模式，父View希望子View的大小是确定的，由specSize决定；
+		//MeasureSpec.AT_MOST //最多模式，父View希望子View的大小最多是specSize指定的值；
+		//MeasureSpec.UNSPECIFIED //未指定模式，父View完全依据子View的设计值来决定； 
+	}
+```
+
+b. 对于自定义ViewGroup，重写onLayout()方法，在onLayout中对子视图进行布局定位。普通视图可以在onLayout()中做初始化工作，如创建Bitmap之类。
+c. 在onDraw方法中，处理视图的绘制工作，不宜在此方法中做复杂耗时的操作。
+d. 在xml中定义属性值，在构造器中解析属性值。
 
 
 
