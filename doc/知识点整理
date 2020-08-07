@@ -287,7 +287,7 @@ c. 在ScaleGestureDetector.OnScaleGestureListener对象的接口方法会接收�
 a. 重写onMeasure()方法，调用setMeasuredDimension()方法；确定视图的宽高。调用setMeasuredDimension()之后，getMeasuredWidth()和getMeasuredHeight()的值才是有效值。
 ```java
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		//MeasureSpec（View的内部类）测量规格为int型，值由高2位规格模式specMode和低30位具体尺寸specSize组成。其中specMode只有三种值
+		//MeasureSpec（View的内部类）测量规格为int型，值由高2位规格模式specMode和低30位具体尺寸specSize组成。其中specMode只有三种值:
 		//MeasureSpec.EXACTLY //确定模式，父View希望子View的大小是确定的，由specSize决定；
 		//MeasureSpec.AT_MOST //最多模式，父View希望子View的大小最多是specSize指定的值；
 		//MeasureSpec.UNSPECIFIED //未指定模式，父View完全依据子View的设计值来决定； 
@@ -305,6 +305,11 @@ d. 在xml中定义属性值，在构造器中解析属性值。
 
 
 ### 主流三方库框架分析：greenDao，glide，leakcanary，dagger
+####GreenDao
+1. GreenDao通过greenDao-gradle-plugin插件对添加注解的实体类进行解析，自动生成对应的DAO类，自动DaoMaster类和DaoSession，用来管理Dao类。
+2. 调用方通过DaoMaster和DaoSession，来获取对应实体的DAO类，实现数据库的增删改查操作。
+DaoMaster --> DaoSession --> xxxDAO
+3. 
 
 
 
