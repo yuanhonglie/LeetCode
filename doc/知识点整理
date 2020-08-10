@@ -296,7 +296,7 @@ a. 重写onMeasure()方法，调用setMeasuredDimension()方法；确定视图�
 
 b. 对于自定义ViewGroup，重写onLayout()方法，在onLayout中对子视图进行布局定位。普通视图可以在onLayout()中做初始化工作，如创建Bitmap之类。
 c. 在onDraw方法中，处理视图的绘制工作，不宜在此方法中做复杂耗时的操作。
-d. 在xml中定义属性值，在构造器中解析属性值。
+d. 在xml中定义属性值，在构造器中解析属性值，在布局文件xml中使用属性。
 
 
 
@@ -309,7 +309,11 @@ d. 在xml中定义属性值，在构造器中解析属性值。
 1. GreenDao通过greenDao-gradle-plugin插件对添加注解的实体类进行解析，自动生成对应的DAO类，自动DaoMaster类和DaoSession，用来管理Dao类。
 2. 调用方通过DaoMaster和DaoSession，来获取对应实体的DAO类，实现数据库的增删改查操作。
 DaoMaster --> DaoSession --> xxxDAO
-3. 
+3. xxxDAO继承自AbstractDao，在AbstractDao中，增加了一个缓存层(哈希表)。
+a. 从DAO中取某个key值的对象时，先从这个缓存层(哈希表)里查找，找到了就直接返回；
+b. update或insert一个对象时，更新缓存，以主键为key以对象为值，存储到一个键值对中；
+c. 调用xxxDAO#detach(T entity)，将对象从缓存中移除。
+
 
 
 
