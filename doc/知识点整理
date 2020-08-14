@@ -304,7 +304,17 @@ d. 在xml中定义属性值，在构造器中解析属性值，在布局文件xm
 
 
 
-### 主流三方库框架分析：greenDao，glide，leakcanary，dagger
+### 主流三方库框架分析：greenDao，glide，
+####leakcanary
+默认监听带生命周期的对象Activity、Fragment。2.0之后，增加了ViewModel的内存泄漏监听。
+Activity，注册了Application#registerActivityLifecycleCallbacks生命周期回调，在onActivityDestroyed()回调中，触发引用检查。
+Fragment，SupportFragmentManager#registerFragmentLifecycleCallbacks，FragmentLifecycleCallbacks
+引用检查的过程：先将memory dump(调用Debug#dumpHprofData(path))出来，然后通过haha库来进行引用分析，查看Activity对象是否仍然被引用。
+调用了shark库来进行引用的分析；
+
+
+####dagger
+
 ####GreenDao
 1. GreenDao通过greenDao-gradle-plugin插件对添加注解的实体类进行解析，自动生成对应的DAO类，自动DaoMaster类和DaoSession，用来管理Dao类。
 2. 调用方通过DaoMaster和DaoSession，来获取对应实体的DAO类，实现数据库的增删改查操作。
