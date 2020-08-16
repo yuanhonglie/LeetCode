@@ -315,8 +315,10 @@ Fragment，SupportFragmentManager#registerFragmentLifecycleCallbacks，FragmentL
 
 ####dagger
 
+
+
 ####GreenDao
-1. GreenDao通过greenDao-gradle-plugin插件对添加注解的实体类进行解析，自动生成对应的DAO类，自动DaoMaster类和DaoSession，用来管理Dao类。
+1. GreenDao通过greenDao-gradle-plugin插件对添加注解的实体类进行解析，自动生成对应的DAO类、DaoMaster类和DaoSession，用来管理Dao类。
 2. 调用方通过DaoMaster和DaoSession，来获取对应实体的DAO类，实现数据库的增删改查操作。
 DaoMaster --> DaoSession --> xxxDAO
 3. xxxDAO继承自AbstractDao，在AbstractDao中，增加了一个缓存层(哈希表)。
@@ -370,8 +372,10 @@ View#setAnimation(Animation)
     animationDrawable.start();//开启动画
 ```
 #### Activity启动流程
-android上一个应用的入口应该是ActivityThread类的main方法就行了
+ActivityManagerService作用是负责Activity和Service的启动和生命周期管理。
+每一个应用程序都有一个ActivityThread来表示应用程序的主进程，而每一个ActivityThread都包含有一个ApplicationThread实例，它是一个Binder对象，负责和其它进程进行通信。
 
+https://blog.csdn.net/luoshengyang/article/details/6685853
 
 
 #### handler消息分发机制
@@ -470,30 +474,63 @@ ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 4. 子View中如果将传递的事件消费掉，ViewGroup中将无法接收到任何事件。
 
 #### Binder
+https://blog.csdn.net/Luoshengyang/article/details/6618363
+
 
 #### Service
 
 
 
 ### 应用性能优化
-
-
-
+布局优化
+内存优化
+启动优化
+网络优化
+包大小优化
+编译速度优化
 
 ### 虚拟机相关：内存，类加载，方法分派机制，线程安全
-
+见ProcessOn
 
 
 
 ### 算法与数据结构
+见ProcessOn、leetcode
 
 
 
+### 组件化，热修复，gradle插件、插件化
+#### 组件化
+1. 见space，ppt
 
-### 组件化，热修复，gradle插件
+2. ARouter
+
+#### 热修复
+
+#### gradle插件
 
 
 
+#### 插件化
+1. 什么是插件化：
+a. Android插件化技术，可以实现功能模块的按需加载和动态更新，其本质是动态加载未安装的apk。
+b. 插件化要解决的三个核心问题：类加载、资源加载、组件生命周期管理
+2. 类加载
+Android中常用的两种类加载器：PathClassLoader和DexClassLoader，它们都继承于BaseDexClassLoader。
+PathClassLoader主要用来加载系统类和应用程序的类，在ART虚拟机上可以加载未安装的apk的dex，在Dalvik则不行。
+DexClassLoader的构造函数比PathClassLoader多了一个，optimizedDirectory参数，这个是用来指定dex的优化产物odex的路径，在源码注释中，指出这个参数从API 26后就弃用了。
+DexClassLoader用来加载未安装apk的dex。
+3. 资源加载
+Android系统通过Resource对象加载资源，因此只需要添加资源（即apk文件）所在路径到AssetManager中，即可实现对插件资源的访问。
+由于AssetManager的构造方法时hide的，需要通过反射区创建。
+4. 组件生命周期管理
+对于Android来说，并不是说类加载进来就可以使用了，很多组件都是有“生命”的；因此对于这些有血有肉的类，必须给他们注入活力，也就是所谓的组件生命周期管理。
+在解决插件中组件的生命周期，通常的做法是通过Hook相应的系统对象，实现欺上瞒下，后面将通过Activity的插件化来进行讲解。
+
+Android 9.0上Android开始对私有API的使用进行限制，所以后面插件化可能退出历史主流，但是了解插件化涉及到的知识和技术，可以更好的理解Android系统
+
+谷歌官方为什么禁止使用热修复和插件化等能动态更新APP的技术呢？
+- 主要是不利于管控，应用只有在上架的时候进行合规性审核。合规性的意思是指，是否有暴力黄色内容、是否违反隐私协议等。如果通过动态化技术更新了APP之后，使得它无法管控这些APP。
 
 ### 编码规范相关：checkstyle，lint，gitlab
 
@@ -502,7 +539,7 @@ ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 
 
 ### 设计模式
-
+见有道云笔记
 
 
 
