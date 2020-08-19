@@ -299,9 +299,8 @@ c. 在onDraw方法中，处理视图的绘制工作，不宜在此方法中做�
 d. 在xml中定义属性值，在构造器中解析属性值，在布局文件xml中使用属性。
 
 
-
 ### 网络通信okHttp+Retrofit
-
+见ProcessOn
 
 
 ### 主流三方库框架分析：greenDao，glide，
@@ -492,9 +491,68 @@ Service Manager的作用是将字符形式的Binder名字转化成Client中对�
 
 Service Manager，它是整个Binder机制的守护进程，用来管理开发者创建的各种Server，并且向Client提供查询Server远程接口的功能。Service Manager在充当Binder机制的守护进程的角色的同时，也在充当Server的角色。
 
+aidl
+1. 定义aidl：
+```java
+package android.os;
+ 
+interface IHelloService {
+    void setVal(int val);
+    int getVal();
+}
+```
+2. 编译aidl文件，生成IHelloService.stub抽象类和IHelloService.stub.Proxy类；
+3. HelloService服务继承IHelloService.Stub抽象类，并实现了IHelloService接口，IHelloService.Stub类继承android.os.Binder；
+4. IHelloService.Stub.Proxy对象是HelloService的远程接口，通过这个对象来获得HelloService的服务。
+5. 通过ServiceManager获取HelloService的远程对象--一个BinderProxy对象，然后调用stub类的asInterface方法转换为IHelloService接口，在接口内部以BinderProxy对象为参数，创建了一个IHelloService.stub.Proxy对象。
+https://blog.csdn.net/luoshengyang/article/details/6642463
+
 #### Service
+启动服务的两种方式：
+1. startService()
+int onStartCommand();
+返回值：
+START_STICKY：如果service进程被kill掉，保留service的状态为开始状态，但不保留递送的intent对象。随后系统会尝试重新创建service，由于服务状态为开始状态，所以创建服务后一定会调用onStartCommand(Intent,int,int)方法。如果在此期间没有任何启动命令被传递到service，那么参数Intent将为null。
+START_NOT_STICKY：“非粘性的”。使用这个返回值时，如果在执行完onStartCommand后，服务被异常kill掉，系统不会自动重启该服务。
+START_REDELIVER_INTENT：重传Intent。使用这个返回值时，如果在执行完onStartCommand后，服务被异常kill掉，系统会自动重启该服务，并将Intent的值传入。
+START_STICKY_COMPATIBILITY：START_STICKY的兼容版本，但不保证服务被kill后一定能重启。
+
+2. bindService(Intent, ServiceConnection)
+a. 定义接口AIDL文件，编译生成java文件IXXXX.stub抽象类
+b. 创建ServiceConnection对象
+public interface ServiceConnection {
+    //通过IHWRManager.Stub.asInterface(service)，结合此回调的返回的IBinder对象service，来获得binder的代理对象。
+	//通过Binder远程代理对象与远端的服务通信。
+    void onServiceConnected(ComponentName name, IBinder service);
 
 
+    void onServiceDisconnected(ComponentName name);
+
+    
+    default void onBindingDied(ComponentName name) {
+    }
+
+    //onBind返回null时调用
+    default void onNullBinding(ComponentName name) {
+    }
+}
+
+c. 调用bindService(Intent, ServiceConnection, int flags);启动服务，如果服务已经被启动，不会重复启动
+d. 在Service中，创建IHWRManager.Stub对象，在Service的onBind()方法中返回给客户端。IHWRManager.Stub对象实现了aidl文件中定义的方法。
+Service {
+
+IBinder onBind();
+
+}
+e. 客户端通过Binder远程代理对象与远端的服务通信。
+
+f. AndroidManifest.xml的service设置不同的进程名
+android:process=":hwr"
+
+startService和bindService的区别：
+多次调用startService，该Service只能被创建一次，即该Service的onCreate方法只会被调用一次。但是每次调用startService，onStartCommand方法都会被调用。Service的onStart方法在API 5时被废弃，替代它的是onStartCommand方法。
+第一次执行bindService时，onCreate和onBind方法会被调用，但是多次执行bindService时，onCreate和onBind方法并不会被多次调用，即并不会多次创建服务和绑定服务。
+startService()对应于stopService()，bindService()对应于unbindService(ServiceConnection)。stopService()不能停止bindService()+BIND_AUTO_CREATE启动的服务。
 
 ### 应用性能优化
 布局优化
@@ -508,10 +566,8 @@ Service Manager，它是整个Binder机制的守护进程，用来管理开发�
 见ProcessOn
 
 
-
 ### 算法与数据结构
 见ProcessOn、leetcode
-
 
 
 ### 组件化，热修复，gradle插件、插件化
@@ -564,6 +620,9 @@ Android 9.0上Android开始对私有API的使用进行限制，所以后面插�
 
 
 ### ANR异常
+1. 导致ANR异常的原因有哪些
 
+
+2. 修改方法
 
 
