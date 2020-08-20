@@ -370,19 +370,6 @@ View#setAnimation(Animation)
     AnimationDrawable animationDrawable = (AnimationDrawable) button.getBackground();
     animationDrawable.start();//开启动画
 ```
-#### Activity启动流程
-ActivityManagerService作用是负责Activity和Service的启动和生命周期管理。
-每一个应用程序都有一个ActivityThread来表示应用程序的主进程，而每一个ActivityThread都包含有一个ApplicationThread实例，它是一个Binder对象，负责和其它进程进行通信。
-
-启动过程：
-1. Launcher通过Binder进程间通信机制通知ActivityManagerService，它要启动一个Activity；
-2. ActivityManagerService通过Binder进程间通信机制通知Launcher进入Paused状态；
-3. Launcher通过Binder进程间通信机制通知ActivityManagerService，它已经准备就绪进入Paused状态，于是ActivityManagerService就创建一个新的进程，用来启动一个ActivityThread实例，即将要启动的Activity就是在这个ActivityThread实例中运行；
-4. ActivityThread通过Binder进程间通信机制将一个ApplicationThread类型的Binder对象传递给ActivityManagerService，以便以后ActivityManagerService能够通过这个Binder对象和它进行通信；
-5. ActivityManagerService通过Binder进程间通信机制通知ActivityThread，现在一切准备就绪，它可以真正执行Activity的启动操作了。
-
-https://blog.csdn.net/luoshengyang/article/details/6685853
-
 
 #### handler消息分发机制
 Message：消息类，存储消息信息，采用链表结构存储，按消息的处理时间先后进行排序；
@@ -554,6 +541,72 @@ startService和bindService的区别：
 第一次执行bindService时，onCreate和onBind方法会被调用，但是多次执行bindService时，onCreate和onBind方法并不会被多次调用，即并不会多次创建服务和绑定服务。
 startService()对应于stopService()，bindService()对应于unbindService(ServiceConnection)。stopService()不能停止bindService()+BIND_AUTO_CREATE启动的服务。
 
+3. IntentService
+IntentService继承自Service，内部采用HandlerThread来实现，在onStartCommand中，采用HandlerThread对应的Handler来发送消息，消息的处理是在HandlerThread中执行的。执行完毕之后会自动停止服务（stopSelf(startId)）
+HandlerThread带有Handler消息处理机制的线程。在Thread.run()中执行了Loop.prepare()方法。
+
+### Activity启动过程分析 --ok
+《Android应用程序的Activity启动过程简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/6685853
+
+ActivityManagerService作用是负责Activity和Service的启动和生命周期管理。
+每一个应用程序都有一个ActivityThread来表示应用程序的主进程，而每一个ActivityThread都包含有一个ApplicationThread实例，它是一个Binder对象，负责和其它进程进行通信。
+
+启动过程：
+1. Launcher通过Binder进程间通信机制通知ActivityManagerService，它要启动一个Activity；
+2. ActivityManagerService通过Binder进程间通信机制通知Launcher进入Paused状态；
+3. Launcher通过Binder进程间通信机制通知ActivityManagerService，它已经准备就绪进入Paused状态，于是ActivityManagerService就创建一个新的进程，用来启动一个ActivityThread实例，即将要启动的Activity就是在这个ActivityThread实例中运行；
+4. ActivityThread通过Binder进程间通信机制将一个ApplicationThread类型的Binder对象传递给ActivityManagerService，以便以后ActivityManagerService能够通过这个Binder对象和它进行通信；
+5. ActivityManagerService通过Binder进程间通信机制通知ActivityThread，现在一切准备就绪，它可以真正执行Activity的启动操作了。
+
+
+### BroadcastReceiver
+《Android系统中的广播（Broadcast）机制简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/6730748
+1. 广播通信机制和Binder通信机制不一样的地方在于，广播的发送者和接收者事先是不需要知道对方的存在的，这样带来的好处便是，系统的各个组件可以松耦合地组织在一起，这样系统就具有高度的可扩展性，容易与其它系统进行集成。
+2. 从本质来说，它是一种消息订阅/发布机制。对Android应用程序来说，订阅消息其实就是注册广播接收器。
+3. 在Android的广播机制中，ActivityManagerService扮演着广播中心的角色，负责系统中所有广播的注册和发布操作。
+
+### ContentProvider
+《Android应用程序组件Content Provider简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/6946067
+
+
+### 进程启动过程
+《Android应用程序进程启动过程的源代码分析》 --ok
+https://blog.csdn.net/luoshengyang/article/details/6747696
+1. 通过Socket与Zygote进程进行通信，请求它fork一个子进程。
+2. 在应用进程启动时，会为进程初始化Binder进程间通信机制的基础设施。
+3. 执行清理进程堆栈，执行ActivityThread.main()方法。
+
+《Android系统进程Zygote启动过程的源代码分析》 --ok
+https://blog.csdn.net/luoshengyang/article/details/6768304
+1. 系统启动时init进程会创建Zygote进程，Zygote进程负责后续Android应用程序框架层的其它进程的创建和启动工作。
+2. Zygote进程会首先创建一个SystemServer进程，SystemServer进程负责启动系统的关键服务，如包管理服务PackageManagerService和应用程序组件管理服务ActivityManagerService。
+3. 当我们需要启动一个Android应用程序时，ActivityManagerService会通过Socket进程间通信机制，通知Zygote进程为这个应用程序创建一个新的进程。
+
+### Android应用程序窗口（Activity）
+《Android应用程序窗口（Activity）实现框架简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/8170307
+
+### Android窗口管理服务WindowManagerService
+《Android窗口管理服务WindowManagerService的简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/8462738
+
+### Android资源管理框架AssetManager
+《Android资源管理框架（Asset Manager）简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/8738877
+
+### Android应用程序安装过程分析
+《Android应用程序安装过程源代码分析》
+https://blog.csdn.net/luoshengyang/article/details/6766010
+《Android系统默认Home应用程序（Launcher）的启动过程源代码分析》
+https://blog.csdn.net/luoshengyang/article/details/6767736
+
+Android系统学习线路总览
+《那两年炼就的Android内功修养》
+https://blog.csdn.net/Luoshengyang/article/details/8923485
+
 ### 应用性能优化
 布局优化
 内存优化
@@ -624,5 +677,3 @@ Android 9.0上Android开始对私有API的使用进行限制，所以后面插�
 
 
 2. 修改方法
-
-
