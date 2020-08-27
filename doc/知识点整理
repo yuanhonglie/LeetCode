@@ -467,9 +467,9 @@ ViewGroup#onTouchEvent() ---> onClick()(ACTION_UP)
 4. 子View中如果将传递的事件消费掉，ViewGroup中将无法接收到任何事件。
 
 #### Binder
-Android进程间通信（IPC）机制Binder简要介绍和学习计划
+《Android进程间通信（IPC）机制Binder简要介绍和学习计划》
 https://blog.csdn.net/Luoshengyang/article/details/6618363
-Android Binder设计与实现 – 设计篇
+《Android Binder设计与实现 – 设计篇》
 https://blog.csdn.net/freshui/article/details/54926111
 Binder框架定义了四个角色：Server，Client，ServiceManager以及Binder驱动
 其中Server，Client，Service Manager运行于用户空间，驱动运行于内核空间。这四个角色的关系和互联网类似：Server是服务器，Client是客户终端，Service Manager是域名服务器（DNS），驱动是路由器。
@@ -570,6 +570,11 @@ https://blog.csdn.net/luoshengyang/article/details/6730748
 ### ContentProvider
 《Android应用程序组件Content Provider简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/6946067
+1. 通过Binder进程间通信机制和匿名共享内存机制来实现的, 通过CursorWindow来将三方应用和ContentProvider与匿名共享内存关联起来；
+2. ContentProvider的数据更新通知机制，关联类：ContentResolver,ContentService,ContentObserver。ContentService是一个系统服务；
+a. 通过ContentResolver将ContentObserver注册到ContentService；
+b. ContentService中，以Uri信息构建树形数据结构，方便数据变化时快速的通知到各个ContentObserver；
+c. 当数据发生变化，ContentProvider会通过Binder调用，通知ContentService，告知各个ContentObserver；
 
 
 ### 进程启动过程
