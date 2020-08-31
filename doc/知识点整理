@@ -377,6 +377,14 @@ MessageQueue：消息队列，主要方法：enquequeMessage()将消息加入到
 Looper：Looper#prepare()为线程创建消息队列，Looper#loop()进入消息循环，取出消息分发给对应的Handler处理。
 Handler：消息发送、处理类；
 
+在 MessageQueue 取消息的 next() 方法中
+Looper.myQueue().addIdleHandler(new MessageQueue.IdleHandler());
+public static interface IdleHandler {
+    boolean queueIdle();
+}
+IdleHandler 是 Handler 提供的一种在消息队列空闲时，执行任务的时机；
+当 MessageQueue 当前没有立即需要处理的消息时，会执行 IdleHandler；
+
 1.Handler与Looper实例化总结
 a. 在主线程中可以直接创建Handler对象，而在子线程中需要先调用Looper.prepare()才能创建Handler对象，否则运行抛出”Can’t create handler inside thread that has not called Looper.prepare()”异常信息。
 b. 每个线程中最多只能有一个Looper对象，否则抛出异常。
@@ -560,16 +568,24 @@ ActivityManagerService作用是负责Activity和Service的启动和生命周期�
 5. ActivityManagerService通过Binder进程间通信机制通知ActivityThread，现在一切准备就绪，它可以真正执行Activity的启动操作了。
 
 
-### BroadcastReceiver
+### BroadcastReceiver --ok
 《Android系统中的广播（Broadcast）机制简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/6730748
 1. 广播通信机制和Binder通信机制不一样的地方在于，广播的发送者和接收者事先是不需要知道对方的存在的，这样带来的好处便是，系统的各个组件可以松耦合地组织在一起，这样系统就具有高度的可扩展性，容易与其它系统进行集成。
 2. 从本质来说，它是一种消息订阅/发布机制。对Android应用程序来说，订阅消息其实就是注册广播接收器。
 3. 在Android的广播机制中，ActivityManagerService扮演着广播中心的角色，负责系统中所有广播的注册和发布操作。
 
+### 匿名共享内存子系统Ashmem（Anonymous Shared Memory）
+《Android系统匿名共享内存Ashmem（Anonymous Shared Memory）简要介绍和学习计划》
+https://blog.csdn.net/luoshengyang/article/details/6651971
+1. 能够辅助内存管理系统来有效地管理不再使用的内存块，
+2. 它通过Binder进程间通信机制来实现进程间的内存共享。
+MemoryFile
+
 ### ContentProvider
 《Android应用程序组件Content Provider简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/6946067
+0. Content Provider作为应用程序四大组件之一，它起到在应用程序之间共享数据的作用。
 1. 通过Binder进程间通信机制和匿名共享内存机制来实现的, 通过CursorWindow来将三方应用和ContentProvider与匿名共享内存关联起来；
 2. ContentProvider的数据更新通知机制，关联类：ContentResolver,ContentService,ContentObserver。ContentService是一个系统服务；
 a. 通过ContentResolver将ContentObserver注册到ContentService；
@@ -680,5 +696,7 @@ Android 9.0上Android开始对私有API的使用进行限制，所以后面插�
 ### ANR异常
 1. 导致ANR异常的原因有哪些
 
-
 2. 修改方法
+
+### RecyclerView原理
+
