@@ -484,10 +484,19 @@ Binder框架定义了四个角色：Server，Client，ServiceManager以及Binder
 Binder驱动负责进程之间Binder通信的建立，Binder在进程之间的传递，Binder引用计数管理，数据包在进程之间的传递和交互等一系列底层支持。
 Service Manager的作用是将字符形式的Binder名字转化成Client中对该Binder的引用，使得Client能够通过Binder名字获得对Server中Binder实体的引用。
 
+1. ServiceManager是如何成为一个守护进程的，ServiceManager是如何告知Binder驱动程序他是Binder通信机制的上下文管理者。
 Service Manager，它是整个Binder机制的守护进程，用来管理开发者创建的各种Server，并且向Client提供查询Server远程接口的功能。Service Manager在充当Binder机制的守护进程的角色的同时，也在充当Server的角色。
+a. 打开Binder的设备文件/dev/binder，Binder通信机制使用句柄来代表远程接口，ServiceManager在Binder驱动中的远程接口的句柄为0；
+b. 建立128k内存映射。同一个物理页面，一方映射到进程虚拟地址空间，一方面映射到内核虚拟地址空间，这样，进程和内核之间就可以减少一次内存拷贝了，提高了数据传输效率。
+c. 通知Binder驱动程序它是守护进程；
+d. 进入循环，等待请求的到来；
+2. Server和Client是如何获得Service Manager接口的？即defaultServiceManager接口是如何实现的。
+a. ServiceManager通过特殊的0号引用句柄来获取。
+b. Server获取到ServiceManager的Binder引用之后，就可以通过调用ServiceManager的addService将服务添加到ServiceManager中。
+c. Client获取到ServiceManager的Binder引用之后，就可以通过调用ServiceManager的getService方法获取对应的Service的代理对象。
 
 aidl
-1. 定义aidl：
+a. 定义aidl：
 ```java
 package android.os;
  
@@ -496,10 +505,10 @@ interface IHelloService {
     int getVal();
 }
 ```
-2. 编译aidl文件，生成IHelloService.stub抽象类和IHelloService.stub.Proxy类；
-3. HelloService服务继承IHelloService.Stub抽象类，并实现了IHelloService接口，IHelloService.Stub类继承android.os.Binder；
-4. IHelloService.Stub.Proxy对象是HelloService的远程接口，通过这个对象来获得HelloService的服务。
-5. 通过ServiceManager获取HelloService的远程对象--一个BinderProxy对象，然后调用stub类的asInterface方法转换为IHelloService接口，在接口内部以BinderProxy对象为参数，创建了一个IHelloService.stub.Proxy对象。
+b. 编译aidl文件，生成IHelloService.stub抽象类和IHelloService.stub.Proxy类；
+c. HelloService服务继承IHelloService.Stub抽象类，并实现了IHelloService接口，IHelloService.Stub类继承android.os.Binder；
+d. IHelloService.Stub.Proxy对象是HelloService的远程接口，通过这个对象来获得HelloService的服务。
+e. 通过ServiceManager获取HelloService的远程对象--一个BinderProxy对象，然后调用stub类的asInterface方法转换为IHelloService接口，在接口内部以BinderProxy对象为参数，创建了一个IHelloService.stub.Proxy对象。
 https://blog.csdn.net/luoshengyang/article/details/6642463
 
 #### Service
@@ -558,7 +567,7 @@ HandlerThread带有Handler消息处理机制的线程。在Thread.run()中执行
 https://blog.csdn.net/luoshengyang/article/details/6685853
 
 ActivityManagerService作用是负责Activity和Service的启动和生命周期管理。
-每一个应用程序都有一个ActivityThread来表示应用程序的主进程，而每一个ActivityThread都包含有一个ApplicationThread实例，它是一个Binder对象，负责和其它进程进行通信。
+每一个应用程序都有一个ActivityThread来表示应用程序的主进程，而每一个ActivityThread都包含有一个ApplicationThread实例，它是一个Binder对象，负责和其它进程进行通信。ApplicationThread在ActivityThread与AMS的通信过程中，作为一个匿名服务。
 
 启动过程：
 1. Launcher通过Binder进程间通信机制通知ActivityManagerService，它要启动一个Activity；
@@ -610,6 +619,12 @@ https://blog.csdn.net/luoshengyang/article/details/6768304
 《Android应用程序窗口（Activity）实现框架简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/8170307
 
+一、Android应用程序窗口的运行上下文的创建过程，即创建ContextImpl的创建过程；
+https://blog.csdn.net/luoshengyang/article/details/8201936
+二、Android应用程序窗口（Activity）的窗口对象（Window）的创建过程分析
+https://blog.csdn.net/luoshengyang/article/details/8223770
+
+
 ### Android窗口管理服务WindowManagerService
 《Android窗口管理服务WindowManagerService的简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/8462738
@@ -617,12 +632,20 @@ https://blog.csdn.net/luoshengyang/article/details/8462738
 ### Android资源管理框架AssetManager
 《Android资源管理框架（Asset Manager）简要介绍和学习计划》
 https://blog.csdn.net/luoshengyang/article/details/8738877
+Android资源管理框架实际就是由AssetManager和Resources两个类来实现的。其中，Resources类可以根据ID来查找资源，而AssetManager类根据文件名来查找资源。
+APK包里面的resources.arsc文件是在编译应用程序资源的时候生成的，然后连同其它被编译的以及原生的资源一起打包在一个APK包里面。
+Android的资源归结为两大类。第一类资源是不对应有文件的，而第二类资源是对应有文件的
+
+二、Android应用程序资源管理器的创建的初始化过程，主要就是创建和初始化用来访问应用程序资源的AssetManager对象和Resources对象，其中，初始化操作包括设置AssetManager对象的资源文件路径以及设备配置信息等。有了这两个初始化的AssetManager对象和Resources对象之后，应用程序就可以查找资源了。
 
 ### Android应用程序安装过程分析
 《Android应用程序安装过程源代码分析》
 https://blog.csdn.net/luoshengyang/article/details/6766010
+
 《Android系统默认Home应用程序（Launcher）的启动过程源代码分析》
 https://blog.csdn.net/luoshengyang/article/details/6767736
+Launcher是怎么启动的？
+通过AMS启动；
 
 Android系统学习线路总览
 《那两年炼就的Android内功修养》
@@ -694,9 +717,20 @@ Android 9.0上Android开始对私有API的使用进行限制，所以后面插�
 
 
 ### ANR异常
+ANR(Application Not responding)。Android中，主线程(UI线程)如果在规定时内没有处理完相应工作，就会出现ANR。
 1. 导致ANR异常的原因有哪些
-
+a.输入事件(按键和触摸事件)5s内没被处理: Input event dispatching timed out
+b.BroadcastReceiver的事件(onRecieve方法)在规定时间内没处理完(前台广播为10s，后台广播为60s)：Timeout of broadcast BroadcastRecord
+c.service 前台20s后台200s未完成启动 Timeout executing service
+d.ContentProvider的publish在10s内没进行完：timeout publishing content providers
 2. 修改方法
+a.主线程读取数据：在Android中主线程去读取数据是非常不好的，Android是不允许主线程从网络读数据的，但系统允许主线程从数据库或者其他地方获取数据，但这种操作ANR风险很大，也会造成掉帧等，影响用户体验。
+ - 避免在主线程query provider
+ - sharePreference的调用 commit() -> apply() 负一屏计步软件引起的ANR
+b.不要在broadcastReciever的onRecieve()方法中干活，这一点很容易被忽略，尤其应用在后台的时候。所以可以选择开个IntentService(使用HandlerThread来处理实现消息处理机制)去执行相应操作。
+c.各个组件的生命周期函数都不应该有太耗时的操作。
+d.尽量避免主线程的被锁的情况，在一些同步的操作主线程有可能被锁，需要等待其他线程释放相应锁才能继续执行，这样会有一定的ANR风险，对于这种情况有时也可以用异步线程来执行相应的逻辑。另外， 我们要避免死锁的发生(主线程被死锁基本就等于要发生ANR了)。
+ - 腾讯sonic浏览器引起的ANR问题
 
 ### RecyclerView原理
 
