@@ -312,8 +312,6 @@ Fragment，SupportFragmentManager#registerFragmentLifecycleCallbacks，FragmentL
 调用了shark库来进行引用的分析；
 
 
-####dagger
-
 
 
 ####GreenDao
@@ -341,7 +339,7 @@ PropertyValuesHolder#getPropertyFunction(Class targetClass, String prefix, Class
 刷新率
 
 ValueAnimator只能在有looper的线程中启动；
-每个线程有一个ThreadLocal对象的AnimationHandler，AnimationHandler通过MyFrameCallbackProvider来产生心跳，每隔10一次心跳，回调属性动画更新属性值。
+每个线程有一个ThreadLocal对象的AnimationHandler，AnimationHandler通过MyFrameCallbackProvider来产生心跳，每隔10ms一次心跳，回调属性动画更新属性值。
 MyFrameCallbackProvider是通过单例Choreographer，通过调用FrameCallback的doFrame(long frameTimeNanos)来渲染每一帧的。
 
 属性动画为什么要在有Looper的线程中执行？因为在动画更新引擎Choreographer中，使用了Handler了来实现定时的。而构造Handler需要有Looper；

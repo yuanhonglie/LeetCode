@@ -15,8 +15,10 @@ public class BinarySearch {
             if (array[mid] == val) {
                 return mid;
             } else if (array[mid] < val) {
+                //目标元素在当前元素的右边
                 low = mid + 1;
             } else {
+                //目标元素在当前元素的左边
                 high = mid - 1;
             }
         }
@@ -34,14 +36,17 @@ public class BinarySearch {
         while (low <= high) {
             mid = low + (high - low) / 2;
             if (array[mid] == val) {
+                //如果当前是数组第一个元素，或者当前元素的前一个元素不等于当前元素，说明当前元素就是第一个等于目标值的元素
                 if (mid == 0 || array[mid - 1] != val) {
                     return mid;
                 } else {
                     high = mid - 1;
                 }
             } else if (array[mid] < val) {
+                //目标元素在当前元素的右边
                 low = mid + 1;
             } else {
+                //目标元素在当前元素的左边
                 high = mid - 1;
             }
         }
@@ -58,15 +63,19 @@ public class BinarySearch {
         int mid = 0;
         while (low <= high) {
             mid = low + (high - low) / 2;
+            //跟目标值相同
             if (array[mid] == val) {
+                //如果当前元素是最后一个元素，或者当前元素的下一个元素与当前元素不相同，则说明当前元素就是目标元素
                 if (mid == array.length - 1 || array[mid + 1] != val) {
                     return mid;
                 } else {
                     low = mid + 1;
                 }
             } else if (array[mid] < val) {
+                //目标元素在当前元素的右边
                 low = mid + 1;
             } else {
+                //目标元素在当前元素的左边
                 high = mid - 1;
             }
         }
@@ -86,9 +95,12 @@ public class BinarySearch {
             if (array[mid] < val) {
                 low = mid + 1;
             } else {
+                //这个分支都是大于等于给定制的元素
                 if (mid == 0 || array[mid - 1] < val) {
+                    //如果当前元素是第一个元素，或者当前元素的前一个元素小于目标值，说明当前元素就是要找的目标元素
                     return mid;
                 } else {
+                    //否则要找的元素在当前元素的左边
                     high = mid - 1;
                 }
             }
@@ -107,9 +119,12 @@ public class BinarySearch {
         while (low <= high) {
             mid = low + (high - low) / 2;
             if (array[mid] <= val) {
+                //当前分支都是小于等于目标值的情况
                 if (mid == array.length - 1 || array[mid + 1] > val) {
+                    //如果当前元素是最后一个元素，或者当前元素的下一个元素是大于等于目标值，那说明当前元素就是要找的元素
                     return mid;
                 } else {
+                    //否则，要找的元素在当前元素的右边
                     low = mid + 1;
                 }
             } else {

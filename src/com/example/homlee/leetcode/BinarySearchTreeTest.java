@@ -22,7 +22,7 @@ public class BinarySearchTreeTest {
         if (node == null) {
             return 0;
         }
-
+        //到这里说明node节点不为null，子节点的最大深度+1
         return Math.max(maxDepth(node.left), maxDepth(node.right)) + 1;
     }
 
@@ -35,36 +35,55 @@ public class BinarySearchTreeTest {
      */
     public TreeNode<Integer> deleteNode(TreeNode<Integer> root, int key) {
 
-        TreeNode<Integer> node = root;
-        TreeNode<Integer> p = null;
-
-        while (node != null) {
-            if (node.value == key) {
-                break;
-            } else {
-                p = node;
-                if (key > node.value) {
-                    node = node.right;
-                } else {
-                    node = node.left;
-                }
-            }
+        if (root == null) {
+            return null;
         }
 
-        if (node != null) {
-            //被删除的是根节点
-            if (p != null && node.left == null && node.right == null) {
-                if (p.left == node) {
-                    p.left = null;
-                } else {
-                    p.right = null;
-                }
-            } else {
-
+        if (key > root.value) {
+            //如果目标节点大于当前节点，则继续在右子树查找；
+            root.right = deleteNode(root.right, key);
+        } else if (key < root.value) {
+            //如果目标节点小于当前节点，则继续在左子树查找；
+            root.left = deleteNode(root.left, key);
+        } else {
+            //如果当前节点值等于指定的值
+            if (root.left == null && root.right == null) {
+                //如果是叶子节点，直接删除
+                root = null;
+            } else if (root.left != null) {
+                //左子树不为空，则查找前驱节点的值；
+                Integer value = maxLeftNodeVal(root);
+                root.value = value;
+                root.left = deleteNode(root.left, value);
+            } else if (root.right != null) {
+                //右子树不为空，则查找后继节点的值；
+                Integer value = minRightNodeVal(root);
+                root.value = value;
+                root.right = deleteNode(root.right, value);
             }
         }
 
         return root;
+    }
+
+    //中序遍历的后继节点
+    private Integer minRightNodeVal(TreeNode<Integer> root) {
+        //先取当前节点的右节点，然后一直取该节点的左节点，直到左节点为空，则最后指向的节点为后继节点
+        root = root.right;
+        while (root.left != null) {
+            root = root.left;
+        }
+        return root.value;
+    }
+
+    //中序遍历的前驱节点
+    private Integer maxLeftNodeVal(TreeNode<Integer> root) {
+        //先取当前节点的左节点，然后取该节点的右节点，直到右节点为空，则最后指向的节点为前驱节点
+        root = root.left;
+        while (root.right != null) {
+            root = root.right;
+        }
+        return root.value;
     }
 
     public static void main(String[] args) {
