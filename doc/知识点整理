@@ -724,11 +724,10 @@ d.ContentProvider的publish在10s内没进行完：timeout publishing content pr
 2. 修改方法
 a.主线程读取数据：在Android中主线程去读取数据是非常不好的，Android是不允许主线程从网络读数据的，但系统允许主线程从数据库或者其他地方获取数据，但这种操作ANR风险很大，也会造成掉帧等，影响用户体验。
  - 避免在主线程query provider
- - sharePreference的调用 commit() -> apply() 负一屏计步软件引起的ANR
+ - sharePreference的调用 commit() -> apply() 负一屏计步软件引起的ANR，改使用腾讯的MMKV;
 b.不要在broadcastReciever的onRecieve()方法中干活，这一点很容易被忽略，尤其应用在后台的时候。所以可以选择开个IntentService(使用HandlerThread来处理实现消息处理机制)去执行相应操作。
 c.各个组件的生命周期函数都不应该有太耗时的操作。
 d.尽量避免主线程的被锁的情况，在一些同步的操作主线程有可能被锁，需要等待其他线程释放相应锁才能继续执行，这样会有一定的ANR风险，对于这种情况有时也可以用异步线程来执行相应的逻辑。另外， 我们要避免死锁的发生(主线程被死锁基本就等于要发生ANR了)。
- - 腾讯sonic浏览器引起的ANR问题
-
+ - 腾讯sonic浏览器引起的ANR问题，初始化时，调用preCreateSession -> internalCreateSession -> new QuickSonicSession or new StandardSonicSession -> SonicSession构造器 -> 创建handler -> 通过HandlerThread创建Looper -> HandlerThread#getLooper()需要等待子线程初始化完毕。
 ### RecyclerView原理
 
